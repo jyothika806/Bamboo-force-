@@ -99,3 +99,4 @@ time,area_risk,driver_rating,ride_type,distance_km,traffic_level,weather,safe
 0,0,3.5,2,5,2,0,1
 1,2,4.1,0,15,0,0,0
 0,2,4.6,2,6,0,1,1
+ main
