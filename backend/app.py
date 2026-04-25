@@ -1,0 +1,5 @@
+from fastapi import FastAPI
+from backend.routes.verify import router as verify_router
+app = FastAPI()
+
+app.include_router(verify_router)
