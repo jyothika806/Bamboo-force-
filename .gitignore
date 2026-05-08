@@ -1,11 +1,20 @@
 # Virtual Environment
 venv/
 
+
+
 # Python cache
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+datasets/
+data/
+*.pth
+*.pt
+*.h5
+*.ckpt
 
 # Environment files
 .env
