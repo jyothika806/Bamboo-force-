@@ -10,12 +10,12 @@ register_bp = Blueprint("register_driver", __name__)
 # PATHS
 # =========================================================
 
-BASE_DATA_DIR = "data/test_faces"
+BASE_DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DATA_DIR, "data", "test_faces")
+ID_DIR = os.path.join(DATA_DIR, "ids")
+LIVE_DIR = os.path.join(DATA_DIR, "live_faces")
 
-ID_DIR = os.path.join(BASE_DATA_DIR, "ids")
-LIVE_DIR = os.path.join(BASE_DATA_DIR, "live_faces")
-
-EMBEDDING_DIR = "ai_models/face_verification/embeddings"
+EMBEDDING_DIR = os.path.join(BASE_DATA_DIR, "embeddings")
 
 os.makedirs(ID_DIR, exist_ok=True)
 os.makedirs(LIVE_DIR, exist_ok=True)
@@ -183,7 +183,9 @@ def register_driver():
 
         id_encodings = face_recognition.face_encodings(id_img)
         live_encodings = face_recognition.face_encodings(live_img)
-
+        
+        print("ID Faces Found:", len(id_encodings))
+        print("Live Faces Found:", len(live_encodings))
         if len(id_encodings) == 0:
             return jsonify({
                 "success": False,
@@ -208,8 +210,8 @@ def register_driver():
             live_embedding
         )[0]
 
-        THRESHOLD = 0.55
-
+        THRESHOLD = 0.75
+        print("Face Distance:", distance)
         # =================================================
         # VERIFIED
         # =================================================
@@ -220,7 +222,8 @@ def register_driver():
                 EMBEDDING_DIR,
                 f"{driver_id}.pkl"
             )
-
+            print("Saving embedding...")
+            print(embedding_path)
             with open(embedding_path, "wb") as f:
                 pickle.dump(live_embedding, f)
 
@@ -244,8 +247,7 @@ def register_driver():
                 "distance": float(distance)
             })
         
-        print(request.form)
-        print(request.files)
+        
 
 
     except Exception as e:
