@@ -1,8 +1,11 @@
 from flask import Flask
-from ai_models.face_verification.register_driver import register_bp
+
+from backend.routes.detect_behavior import (
+    detect_behavior_bp
+)
 
 # =========================================================
-# CREATE FLASK APP
+# FLASK APP
 # =========================================================
 
 app = Flask(__name__)
@@ -11,17 +14,21 @@ app = Flask(__name__)
 # REGISTER BLUEPRINTS
 # =========================================================
 
-app.register_blueprint(register_bp)
+app.register_blueprint(
+    detect_behavior_bp
+)
 
 # =========================================================
-# ROOT ROUTE
+# HOME ROUTE
 # =========================================================
 
 @app.route("/")
+
 def home():
+
     return {
-        "success": True,
-        "message": "SecureRide AI Backend Running"
+
+        "message": "Bamboo Force Backend Running"
     }
 
 # =========================================================
@@ -29,8 +36,7 @@ def home():
 # =========================================================
 
 if __name__ == "__main__":
+
     app.run(
-        host="0.0.0.0",
-        port=5000,
         debug=True
     )
