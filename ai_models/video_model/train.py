@@ -1,8 +1,8 @@
 import os
 import torch
 import numpy as np
-from dataset import load_video_fast
-from model import VideoModel
+from ai_models.video_model.dataset import load_video_fast
+from ai_models.video_model.model import VideoModel
 def main():
     device = torch.device("cpu")
 

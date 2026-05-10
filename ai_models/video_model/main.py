@@ -12,7 +12,7 @@ def show_menu():
 def train_model():
     try:
         print("\n[INFO] Starting training...")
-        import train
+        import ai_models.video_model.train as train
     except Exception as e:
         print(f"[ERROR] Training failed: {e}")
 
