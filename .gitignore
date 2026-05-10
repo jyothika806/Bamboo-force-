@@ -10,7 +10,7 @@ __pycache__/
 *.pyd
 
 datasets/
-data/
+data/test_faces/
 *.pth
 *.pt
 *.h5
