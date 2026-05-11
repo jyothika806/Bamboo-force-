@@ -3,6 +3,10 @@
 
 <head>
 
+    <!-- ========================================= -->
+    <!-- META -->
+    <!-- ========================================= -->
+
     <meta charset="UTF-8">
 
     <meta
@@ -10,12 +14,18 @@
         content="width=device-width, initial-scale=1.0"
     >
 
+    <!-- ========================================= -->
+    <!-- TITLE -->
+    <!-- ========================================= -->
+
     <title>
-        Bamboo Force | AI Urban Mobility
+
+        Bamboo Force AI | Unified AI Mobility Platform
+
     </title>
 
     <!-- ========================================= -->
-    <!-- GOOGLE FONTS -->
+    <!-- GOOGLE FONT -->
     <!-- ========================================= -->
 
     <link
@@ -35,7 +45,7 @@
     >
 
     <!-- ========================================= -->
-    <!-- ICONS -->
+    <!-- FONT AWESOME -->
     <!-- ========================================= -->
 
     <link
@@ -69,792 +79,1015 @@
     <div class="blur-circle blur-two"></div>
 
     <!-- ========================================= -->
-    <!-- NAVBAR -->
+    <!-- MAIN APP -->
     <!-- ========================================= -->
 
-    <nav class="navbar">
+    <div class="app-container">
 
-        <div class="logo-container">
+        <!-- ===================================== -->
+        <!-- SIDEBAR -->
+        <!-- ===================================== -->
 
-            <div class="logo">
-
-                <i class="fa-solid fa-bamboo"></i>
-
-            </div>
-
-            <div class="logo-text">
-
-                <h1>
-                    Bamboo Force
-                </h1>
-
-                <p>
-                    AI Transportation Orchestration
-                </p>
-
-            </div>
-
-        </div>
-
-        <div class="nav-links">
-
-            <a href="#features">
-                Features
-            </a>
-
-            <a href="#dashboard">
-                Dashboard
-            </a>
-
-            <a href="#ride-section">
-                Smart Ride
-            </a>
-
-        </div>
-
-        <button class="nav-btn">
-
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-
-            AI Mobility
-
-        </button>
-
-    </nav>
-
-    <!-- ========================================= -->
-    <!-- HERO SECTION -->
-    <!-- ========================================= -->
-
-    <section class="hero-section">
-
-        <div class="hero-left">
-
-            <div class="hero-badge">
-
-                <i class="fa-solid fa-bolt"></i>
-
-                Real-Time AI Traffic Optimization
-
-            </div>
-
-            <h1>
-
-                Transforming
-                <span>
-                    Urban Transportation
-                </span>
-                With Intelligent Ride Orchestration
-
-            </h1>
-
-            <p>
-
-                Bamboo Force dynamically connects passengers,
-                optimizes vehicle usage,
-                reduces congestion,
-                and builds smarter transportation systems
-                powered by artificial intelligence.
-
-            </p>
+        <aside class="sidebar">
 
             <!-- ================================= -->
-            <!-- QUICK BENEFITS -->
+            <!-- LOGO -->
             <!-- ================================= -->
 
-            <div class="hero-benefits">
+            <div class="sidebar-logo">
 
-                <div class="benefit">
+                <div class="logo-icon">
+
+                    <i class="fa-solid fa-bamboo"></i>
+
+                </div>
+
+                <div>
+
+                    <h2>
+
+                        Bamboo Force
+
+                    </h2>
+
+                    <p>
+
+                        AI Mobility Platform
+
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!-- ================================= -->
+            <!-- NAVIGATION -->
+            <!-- ================================= -->
+
+            <nav class="sidebar-nav">
+
+                <button
+                    class="nav-item active"
+                    onclick="showSection('dashboardSection', event)"
+                >
+
+                    <i class="fa-solid fa-house"></i>
+
+                    Dashboard
+
+                </button>
+
+                <button
+                    class="nav-item"
+                    onclick="showSection('safetySection', event)"
+                >
+
+                    <i class="fa-solid fa-shield-halved"></i>
+
+                    AI Safety & Identity
+
+                </button>
+
+                <button
+                    class="nav-item"
+                    onclick="showSection('riskSection', event)"
+                >
+
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+
+                    Ride Risk Prediction
+
+                </button>
+
+                <button
+                    class="nav-item"
+                    onclick="showSection('optimizationSection', event)"
+                >
 
                     <i class="fa-solid fa-route"></i>
 
+                    Ride Optimization
+
+                </button>
+
+                <button
+                    class="nav-item"
+                    onclick="showSection('analyticsSection', event)"
+                >
+
+                    <i class="fa-solid fa-chart-pie"></i>
+
+                    Analytics
+
+                </button>
+
+            </nav>
+
+            <!-- ================================= -->
+            <!-- LIVE STATUS -->
+            <!-- ================================= -->
+
+            <div class="sidebar-status">
+
+                <div class="status-header">
+
+                    <div class="status-dot"></div>
+
                     <span>
-                        Dynamic Ride Chaining
+
+                        AI Systems Active
+
                     </span>
 
                 </div>
 
-                <div class="benefit">
+                <div class="status-grid">
 
-                    <i class="fa-solid fa-car-side"></i>
+                    <div class="status-item">
 
-                    <span>
-                        Smart Vehicle Optimization
-                    </span>
+                        <span>
+
+                            Backend
+
+                        </span>
+
+                        <strong>
+
+                            ONLINE
+
+                        </strong>
+
+                    </div>
+
+                    <div class="status-item">
+
+                        <span>
+
+                            Verification
+
+                        </span>
+
+                        <strong>
+
+                            READY
+
+                        </strong>
+
+                    </div>
+
+                    <div class="status-item">
+
+                        <span>
+
+                            Optimization
+
+                        </span>
+
+                        <strong>
+
+                            ACTIVE
+
+                        </strong>
+
+                    </div>
+
+                    <div class="status-item">
+
+                        <span>
+
+                            Risk Engine
+
+                        </span>
+
+                        <strong>
+
+                            MONITORING
+
+                        </strong>
+
+                    </div>
 
                 </div>
 
-                <div class="benefit">
+            </div>
 
-                    <i class="fa-solid fa-earth-asia"></i>
+        </aside>
 
-                    <span>
-                        Traffic Reduction Intelligence
-                    </span>
+        <!-- ===================================== -->
+        <!-- MAIN CONTENT -->
+        <!-- ===================================== -->
+
+        <main class="main-content">
+
+            <!-- ================================= -->
+            <!-- TOPBAR -->
+            <!-- ================================= -->
+
+            <header class="topbar">
+
+                <div>
+
+                    <h1>
+
+                        Bamboo Force AI
+
+                    </h1>
+
+                    <p>
+
+                        Real-Time AI Transportation Intelligence Platform
+
+                    </p>
+
+                </div>
+
+                <button class="launch-btn">
+
+                    <i class="fa-solid fa-bolt"></i>
+
+                    AI Systems Running
+
+                </button>
+
+            </header>
+
+            <!-- ================================= -->
+            <!-- SYSTEM STATUS BAR -->
+            <!-- ================================= -->
+
+            <div class="system-banner">
+
+                <div class="system-item">
+
+                    <span class="system-dot"></span>
+
+                    Optimization Engine Active
+
+                </div>
+
+                <div class="system-item">
+
+                    <span class="system-dot"></span>
+
+                    Face Verification Ready
+
+                </div>
+
+                <div class="system-item">
+
+                    <span class="system-dot"></span>
+
+                    Risk Monitoring Online
 
                 </div>
 
             </div>
 
             <!-- ================================= -->
-            <!-- BUTTONS -->
+            <!-- DASHBOARD SECTION -->
             <!-- ================================= -->
 
-            <div class="hero-buttons">
+            <section
+                id="dashboardSection"
+                class="content-section active-section"
+            >
 
-                <button class="primary-btn">
+                <!-- ================================= -->
+                <!-- HERO -->
+                <!-- ================================= -->
 
-                    <i class="fa-solid fa-play"></i>
+                <div class="hero-banner">
 
-                    Start Smart Ride
+                    <div class="hero-text">
 
-                </button>
+                        <div class="hero-badge">
 
-                <button class="secondary-btn">
+                            <i class="fa-solid fa-microchip"></i>
+
+                            AI Transportation Intelligence
+
+                        </div>
+
+                        <h1>
+
+                            AI-Powered Safety,
+                            Identity,
+                            and Smart Mobility.
+
+                        </h1>
+
+                        <p>
+
+                            Bamboo Force AI combines intelligent
+                            ride optimization,
+                            AI-powered face verification,
+                            and ride risk prediction
+                            into one seamless smart mobility ecosystem.
+
+                        </p>
+
+                        <!-- ========================= -->
+                        <!-- HERO ACTIONS -->
+                        <!-- ========================= -->
+
+                        <div class="hero-actions">
+
+                            <button
+                                class="primary-btn"
+                                onclick="showSection('optimizationSection', event)"
+                            >
+
+                                <i class="fa-solid fa-route"></i>
+
+                                Start Smart Ride
+
+                            </button>
+
+                            <button
+                                class="secondary-btn"
+                                onclick="showSection('safetySection', event)"
+                            >
+
+                                <i class="fa-solid fa-shield-halved"></i>
+
+                                Open AI Safety
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- ================================= -->
+                <!-- LIVE METRICS -->
+                <!-- ================================= -->
+
+                <div class="metrics-strip">
+
+                    <div class="metric-box">
+
+                        <h3>
+
+                            Active Rides
+
+                        </h3>
+
+                        <p>
+
+                            12
+
+                        </p>
+
+                    </div>
+
+                    <div class="metric-box">
+
+                        <h3>
+
+                            Verified Drivers
+
+                        </h3>
+
+                        <p>
+
+                            48
+
+                        </p>
+
+                    </div>
+
+                    <div class="metric-box">
+
+                        <h3>
+
+                            Risk Alerts
+
+                        </h3>
+
+                        <p>
+
+                            2
+
+                        </p>
+
+                    </div>
+
+                    <div class="metric-box">
+
+                        <h3>
+
+                            Traffic Reduced
+
+                        </h3>
+
+                        <p>
+
+                            37%
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <!-- ================================= -->
+                <!-- QUICK ACTIONS -->
+                <!-- ================================= -->
+
+                <div class="quick-actions">
+
+                    <button class="quick-btn">
+
+                        <i class="fa-solid fa-camera"></i>
+
+                        Verify Driver
+
+                    </button>
+
+                    <button class="quick-btn">
+
+                        <i class="fa-solid fa-route"></i>
+
+                        Create Smart Ride
+
+                    </button>
+
+                    <button class="quick-btn">
+
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+
+                        Analyze Risk
+
+                    </button>
+
+                </div>
+
+                <!-- ================================= -->
+                <!-- MODULE GRID -->
+                <!-- ================================= -->
+
+                <div class="module-grid">
+
+                    <!-- ================================= -->
+                    <!-- SAFETY -->
+                    <!-- ================================= -->
+
+                    <div class="module-card">
+
+                        <div class="module-icon">
+
+                            <i class="fa-solid fa-user-shield"></i>
+
+                        </div>
+
+                        <div class="live-tag">
+
+                            LIVE AI
+
+                        </div>
+
+                        <h3>
+
+                            AI Safety & Identity
+
+                        </h3>
+
+                        <p>
+
+                            Verify drivers,
+                            prevent spoofing,
+                            and confirm rider identity
+                            using advanced facial AI systems.
+
+                        </p>
+
+                        <div class="module-features">
+
+                            <span>
+
+                                Driver KYC
+
+                            </span>
+
+                            <span>
+
+                                Rider Match
+
+                            </span>
+
+                            <span>
+
+                                Anti-Spoof AI
+
+                            </span>
+
+                        </div>
+
+                        <button
+                            class="module-btn"
+                            onclick="showSection('safetySection', event)"
+                        >
+
+                            Launch Safety Module
+
+                        </button>
+
+                    </div>
+
+                    <!-- ================================= -->
+                    <!-- RISK -->
+                    <!-- ================================= -->
+
+                    <div class="module-card">
+
+                        <div class="module-icon">
+
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+
+                        </div>
+
+                        <div class="live-tag">
+
+                            LIVE AI
+
+                        </div>
+
+                        <h3>
+
+                            Ride Risk Prediction
+
+                        </h3>
+
+                        <p>
+
+                            Detect anomalies,
+                            predict unsafe rides,
+                            and monitor transportation safety
+                            using AI-driven intelligence.
+
+                        </p>
+
+                        <div class="module-features">
+
+                            <span>
+
+                                Risk Analysis
+
+                            </span>
+
+                            <span>
+
+                                AI Alerts
+
+                            </span>
+
+                            <span>
+
+                                Safety Monitoring
+
+                            </span>
+
+                        </div>
+
+                        <button
+                            class="module-btn"
+                            onclick="showSection('riskSection', event)"
+                        >
+
+                            Analyze Ride Safety
+
+                        </button>
+
+                    </div>
+
+                    <!-- ================================= -->
+                    <!-- OPTIMIZATION -->
+                    <!-- ================================= -->
+
+                    <div class="module-card">
+
+                        <div class="module-icon">
+
+                            <i class="fa-solid fa-route"></i>
+
+                        </div>
+
+                        <div class="live-tag">
+
+                            LIVE AI
+
+                        </div>
+
+                        <h3>
+
+                            Ride Optimization
+
+                        </h3>
+
+                        <p>
+
+                            Reduce traffic,
+                            create smart ride pooling,
+                            and optimize urban transportation
+                            using AI orchestration systems.
+
+                        </p>
+
+                        <div class="module-features">
+
+                            <span>
+
+                                Smart Pooling
+
+                            </span>
+
+                            <span>
+
+                                Traffic Reduction
+
+                            </span>
+
+                            <span>
+
+                                Dynamic Clustering
+
+                            </span>
+
+                        </div>
+
+                        <button
+                            class="primary-btn"
+                            onclick="demoCreateRide()"
+                        >
+
+                            <i class="fa-solid fa-route"></i>
+
+                            Optimize Ride
+
+                        </button>
+    
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ================================= -->
+            <!-- SAFETY SECTION -->
+            <!-- ================================= -->
+
+            <section
+                id="safetySection"
+                class="content-section"
+            >
+
+                <div class="section-title">
+
+                    <div class="hero-badge">
+
+                        <i class="fa-solid fa-shield-halved"></i>
+
+                        AI Identity Systems
+
+                    </div>
+
+                    <h2>
+
+                        AI Safety & Identity
+
+                    </h2>
+
+                    <p>
+
+                        Intelligent driver verification
+                        and ride-time identity confirmation systems.
+
+                    </p>
+
+                </div>
+
+                <div class="module-grid">
+
+                    <!-- DRIVER KYC -->
+
+                    <div class="module-card">
+
+                        <div class="module-icon">
+
+                            <i class="fa-solid fa-id-card"></i>
+
+                        </div>
+
+                        <div class="live-tag">
+
+                            ACTIVE
+
+                        </div>
+
+                        <h3>
+
+                            Driver KYC Verification
+
+                        </h3>
+
+                        <p>
+
+                            Verify drivers before platform approval
+                            using AI-based face authentication
+                            and spoof detection.
+
+                        </p>
+
+                        <button class="module-btn">
+
+                            Start Driver Verification
+
+                        </button>
+
+                    </div>
+
+                    <!-- RIDER MATCH -->
+
+                    <div class="module-card">
+
+                        <div class="module-icon">
+
+                            <i class="fa-solid fa-camera"></i>
+
+                        </div>
+
+                        <div class="live-tag">
+
+                            ACTIVE
+
+                        </div>
+
+                        <h3>
+
+                            Rider Match Verification
+
+                        </h3>
+
+                        <p>
+
+                            Passengers can verify that
+                            the arriving driver matches
+                            the registered platform identity.
+
+                        </p>
+
+                        <button class="module-btn">
+
+                            Verify Driver Identity
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ================================= -->
+            <!-- RISK SECTION -->
+            <!-- ================================= -->
+
+            <section
+                id="riskSection"
+                class="content-section"
+            >
+
+                <div class="section-title">
+
+                    <div class="hero-badge">
+
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+
+                        AI Risk Intelligence
+
+                    </div>
+
+                    <h2>
+
+                        Ride Risk Prediction
+
+                    </h2>
+
+                    <p>
+
+                        AI-powered anomaly detection
+                        and transportation safety intelligence.
+
+                    </p>
+
+                </div>
+
+                <div class="placeholder-box">
 
                     <i class="fa-solid fa-chart-line"></i>
 
-                    View AI Dashboard
+                    <h3>
 
-                </button>
+                        Risk Prediction System
 
-            </div>
-
-        </div>
-
-        <!-- ===================================== -->
-        <!-- HERO RIGHT -->
-        <!-- ===================================== -->
-
-        <div class="hero-right">
-
-            <div class="glass-card ai-card">
-
-                <div class="card-top">
-
-                    <div class="live-dot"></div>
-
-                    <span>
-                        AI Engine Active
-                    </span>
-
-                </div>
-
-                <h3>
-
-                    Real-Time Urban Optimization
-
-                </h3>
-
-                <div class="card-metrics">
-
-                    <div class="metric-item">
-
-                        <span>
-                            Traffic Reduction
-                        </span>
-
-                        <strong>
-                            42%
-                        </strong>
-
-                    </div>
-
-                    <div class="metric-item">
-
-                        <span>
-                            Occupancy Efficiency
-                        </span>
-
-                        <strong>
-                            89%
-                        </strong>
-
-                    </div>
-
-                    <div class="metric-item">
-
-                        <span>
-                            Fuel Savings
-                        </span>
-
-                        <strong>
-                            ₹12,400
-                        </strong>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="floating-alert">
-
-                <i class="fa-solid fa-link"></i>
-
-                Dynamic Ride Chaining Enabled
-
-            </div>
-
-            <div class="mini-card mini-card-one">
-
-                <i class="fa-solid fa-users"></i>
-
-                218 Shared Riders
-
-            </div>
-
-            <div class="mini-card mini-card-two">
-
-                <i class="fa-solid fa-leaf"></i>
-
-                31% Carbon Reduction
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- ========================================= -->
-    <!-- FEATURES -->
-    <!-- ========================================= -->
-
-    <section
-        class="features-section"
-        id="features"
-    >
-
-        <div class="section-header">
-
-            <h2>
-
-                Why Bamboo Force?
-
-            </h2>
-
-            <p>
-
-                Designed for first-time users,
-                optimized for future smart cities.
-
-            </p>
-
-        </div>
-
-        <div class="features-grid">
-
-            <div class="feature-card">
-
-                <i class="fa-solid fa-brain"></i>
-
-                <h3>
-                    AI Ride Intelligence
-                </h3>
-
-                <p>
-
-                    Automatically groups compatible passengers
-                    for maximum ride efficiency.
-
-                </p>
-
-            </div>
-
-            <div class="feature-card">
-
-                <i class="fa-solid fa-road"></i>
-
-                <h3>
-                    Traffic Optimization
-                </h3>
-
-                <p>
-
-                    Reduces unnecessary vehicles
-                    and lowers city congestion dynamically.
-
-                </p>
-
-            </div>
-
-            <div class="feature-card">
-
-                <i class="fa-solid fa-arrow-right-arrow-left"></i>
-
-                <h3>
-                    Dynamic Ride Chaining
-                </h3>
-
-                <p>
-
-                    Passengers can continue shared rides
-                    seamlessly across routes.
-
-                </p>
-
-            </div>
-
-            <div class="feature-card">
-
-                <i class="fa-solid fa-seedling"></i>
-
-                <h3>
-                    Sustainable Mobility
-                </h3>
-
-                <p>
-
-                    Smarter ride orchestration
-                    means cleaner and greener transportation.
-
-                </p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- ========================================= -->
-    <!-- SMART RIDE FORM -->
-    <!-- ========================================= -->
-
-    <section
-        class="ride-section"
-        id="ride-section"
-    >
-
-        <div class="section-header">
-
-            <h2>
-
-                Create Your Smart Ride
-
-            </h2>
-
-            <p>
-
-                Simple for first-time users.
-                Powerful AI underneath.
-
-            </p>
-
-        </div>
-
-        <div class="ride-container">
-
-            <!-- ================================= -->
-            <!-- LEFT INFO -->
-            <!-- ================================= -->
-
-            <div class="ride-info">
-
-                <h3>
-
-                    How It Works
-
-                </h3>
-
-                <div class="step">
-
-                    <span>
-                        1
-                    </span>
+                    </h3>
 
                     <p>
 
-                        Enter your ride details
+                        Start monitoring ride safety
+                        and analyze transportation risks
+                        using AI intelligence.
 
                     </p>
 
                 </div>
 
-                <div class="step">
-
-                    <span>
-                        2
-                    </span>
-
-                    <p>
-
-                        AI finds optimized shared routes
-
-                    </p>
-
-                </div>
-
-                <div class="step">
-
-                    <span>
-                        3
-                    </span>
-
-                    <p>
-
-                        Reduce cost and traffic automatically
-
-                    </p>
-
-                </div>
-
-                <div class="step">
-
-                    <span>
-                        4
-                    </span>
-
-                    <p>
-
-                        Continue rides dynamically with chaining
-
-                    </p>
-
-                </div>
-
-            </div>
+            </section>
 
             <!-- ================================= -->
-            <!-- FORM -->
+            <!-- OPTIMIZATION SECTION -->
             <!-- ================================= -->
 
-            <form
-                id="rideForm"
-                class="ride-form"
+            <section
+                id="optimizationSection"
+                class="content-section"
             >
 
-                <div class="form-grid">
+                <div class="section-title">
 
-                    <div class="input-group">
+                    <div class="hero-badge">
 
-                        <label>
+                        <i class="fa-solid fa-route"></i>
 
-                            Ride ID
-
-                        </label>
-
-                        <input
-                            type="text"
-                            id="ride_id"
-                            placeholder="R100"
-                            required
-                        >
+                        AI Mobility Optimization
 
                     </div>
 
-                    <div class="input-group">
+                    <h2>
 
-                        <label>
+                        Smart Ride Optimization
 
-                            Passenger Count
+                    </h2>
 
-                        </label>
+                    <p>
 
-                        <input
-                            type="number"
-                            id="passenger_count"
-                            placeholder="2"
-                            min="1"
-                            required
-                        >
+                        AI-driven urban transportation
+                        orchestration and intelligent ride pooling.
 
-                    </div>
-
-                    <div class="input-group">
-
-                        <label>
-
-                            Source Latitude
-
-                        </label>
-
-                        <input
-                            type="number"
-                            id="source_lat"
-                            placeholder="17.3850"
-                            step="any"
-                            required
-                        >
-
-                    </div>
-
-                    <div class="input-group">
-
-                        <label>
-
-                            Source Longitude
-
-                        </label>
-
-                        <input
-                            type="number"
-                            id="source_lon"
-                            placeholder="78.4867"
-                            step="any"
-                            required
-                        >
-
-                    </div>
-
-                    <div class="input-group">
-
-                        <label>
-
-                            Destination Latitude
-
-                        </label>
-
-                        <input
-                            type="number"
-                            id="dest_lat"
-                            placeholder="17.4435"
-                            step="any"
-                            required
-                        >
-
-                    </div>
-
-                    <div class="input-group">
-
-                        <label>
-
-                            Destination Longitude
-
-                        </label>
-
-                        <input
-                            type="number"
-                            id="dest_lon"
-                            placeholder="78.3772"
-                            step="any"
-                            required
-                        >
-
-                    </div>
+                    </p>
 
                 </div>
 
-                <div class="checkbox-group">
+                <div class="placeholder-box">
 
-                    <input
-                        type="checkbox"
-                        id="share_allowed"
-                        checked
-                    >
+                    <i class="fa-solid fa-route"></i>
 
-                    <label for="share_allowed">
+                    <h3>
 
-                        Enable Smart Ride Sharing
+                        Ride Optimization Module
 
-                    </label>
+                    </h3>
+
+                    <p>
+
+                        Your AI ride orchestration system
+                        will dynamically appear here.
+
+                    </p>
 
                 </div>
 
-                <button
-                    type="submit"
-                    class="submit-btn"
-                >
+            </section>
 
-                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <!-- ================================= -->
+            <!-- ANALYTICS SECTION -->
+            <!-- ================================= -->
 
-                    Optimize My Ride
+            <section
+                id="analyticsSection"
+                class="content-section"
+            >
 
-                </button>
+                <div class="section-title">
 
-            </form>
+                    <div class="hero-badge">
 
-        </div>
+                        <i class="fa-solid fa-chart-pie"></i>
 
-    </section>
+                        AI Analytics
 
-    <!-- ========================================= -->
-    <!-- LIVE DASHBOARD -->
-    <!-- ========================================= -->
+                    </div>
 
-    <section
-        class="dashboard-section"
-        id="dashboard"
-    >
+                    <h2>
 
-        <div class="section-header">
+                        Analytics Dashboard
 
-            <h2>
+                    </h2>
 
-                Live AI Dashboard
+                    <p>
 
-            </h2>
+                        Live AI metrics,
+                        mobility insights,
+                        and transportation intelligence.
 
-            <p>
+                    </p>
 
-                Real-time orchestration analytics
+                </div>
 
-            </p>
+                <div class="placeholder-box">
 
-        </div>
+                    <i class="fa-solid fa-chart-pie"></i>
 
-        <div class="dashboard-grid">
+                    <h3>
 
-            <div class="dashboard-card">
+                        Analytics System
 
-                <i class="fa-solid fa-car"></i>
+                    </h3>
 
-                <h3>
+                    <p>
 
-                    Active Rides
+                        Start using AI systems
+                        to unlock live analytics
+                        and transportation insights.
 
-                </h3>
+                    </p>
 
-                <p id="activeRideCount">
+                </div>
 
-                    0
+            </section>
 
-                </p>
+        </main>
 
-            </div>
-
-            <div class="dashboard-card">
-
-                <i class="fa-solid fa-chart-line"></i>
-
-                <h3>
-
-                    Optimization Score
-
-                </h3>
-
-                <p>
-
-                    94%
-
-                </p>
-
-            </div>
-
-            <div class="dashboard-card">
-
-                <i class="fa-solid fa-city"></i>
-
-                <h3>
-
-                    Traffic Reduced
-
-                </h3>
-
-                <p>
-
-                    42%
-
-                </p>
-
-            </div>
-
-            <div class="dashboard-card">
-
-                <i class="fa-solid fa-microchip"></i>
-
-                <h3>
-
-                    AI Status
-
-                </h3>
-
-                <p class="active-status">
-
-                    ACTIVE
-
-                </p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <!-- ========================================= -->
-    <!-- ACTIVE GROUPS -->
-    <!-- ========================================= -->
-
-    <section class="groups-section">
-
-        <div class="section-header">
-
-            <h2>
-
-                Smart Ride Groups
-
-            </h2>
-
-            <p>
-
-                Live AI-powered ride orchestration
-
-            </p>
-
-        </div>
-
-        <div
-            id="groupsContainer"
-            class="groups-grid"
-        >
-
-        </div>
-
-    </section>
-
-    <!-- ========================================= -->
-    <!-- RECOMMENDATIONS -->
-    <!-- ========================================= -->
-
-    <section class="recommendation-section">
-
-        <div class="section-header">
-
-            <h2>
-
-                AI Recommendations
-
-            </h2>
-
-            <p>
-
-                Intelligent transportation insights
-
-            </p>
-
-        </div>
-
-        <div
-            id="recommendationContainer"
-            class="recommendation-grid"
-        >
-
-        </div>
-
-    </section>
-
-    <!-- ========================================= -->
-    <!-- FOOTER -->
-    <!-- ========================================= -->
-
-    <footer class="footer">
-
-        <h2>
-
-            Bamboo Force
-
-        </h2>
-
-        <p>
-
-            Building the future of AI-powered urban mobility.
-
-        </p>
-
-    </footer>
+    </div>
 
     <!-- ========================================= -->
     <!-- SCRIPT -->
     <!-- ========================================= -->
+
+    <script>
+
+        // =========================================
+        // SHOW SECTIONS
+        // =========================================
+
+        function showSection(
+
+            sectionId,
+            event
+        ) {
+
+            const sections = document.querySelectorAll(
+                ".content-section"
+            );
+
+            sections.forEach(section => {
+
+                section.classList.remove(
+                    "active-section"
+                );
+            });
+
+            document
+                .getElementById(sectionId)
+                .classList.add(
+                    "active-section"
+                );
+
+            const navItems = document.querySelectorAll(
+                ".nav-item"
+            );
+
+            navItems.forEach(item => {
+
+                item.classList.remove(
+                    "active"
+                );
+            });
+
+            if (event) {
+
+                event.currentTarget.classList.add(
+                    "active"
+                );
+            }
+
+            window.scrollTo({
+
+                top: 0,
+
+                behavior: "smooth"
+            });
+        }
+
+    </script>
+    <!-- ========================================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ========================================= -->
+
+    <script src="api.js"></script>
 
     <script src="script.js"></script>
 

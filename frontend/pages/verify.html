@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <title>Bamboo Force AI</title>
+
+    <link rel="stylesheet"
+
+          href="../css/face_verification.css">
+          
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Face Verification</h1>
+
+    <div class="card">
+
+        <input
+
+            type="file"
+
+            id="imageInput"
+        >
+
+        <button onclick="handleVerify()">
+
+            Verify Face
+
+        </button>
+
+    </div>
+
+    <div
+
+        id="result"
+
+        class="result-box"
+    >
+
+        Waiting for verification...
+
+    </div>
+
+</div>
+
+<script src="../js/api.js"></script>
+
+<script src="../js/face_verification.js"></script>
+
+</body>
+
+</html>

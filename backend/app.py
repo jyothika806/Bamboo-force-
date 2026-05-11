@@ -18,6 +18,18 @@ from backend.routes.ride_optimization import (
     ride_optimization_bp
 )
 
+from backend.routes.verify import (
+    verify_bp
+)
+
+from backend.routes.risk_prediction import (
+    risk_prediction_bp
+)
+
+from backend.routes.liveness import (
+    liveness_bp
+)
+
 # =========================================================
 # CREATE FLASK APP
 # =========================================================
@@ -35,7 +47,6 @@ CORS(app)
 # =========================================================
 
 app.config["JSON_SORT_KEYS"] = False
-
 app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
 
 # =========================================================
@@ -54,6 +65,27 @@ app.register_blueprint(
     ride_optimization_bp,
 
     url_prefix="/api/ride"
+)
+
+app.register_blueprint(
+
+    verify_bp,
+
+    url_prefix="/api/verify"
+)
+
+app.register_blueprint(
+
+    risk_prediction_bp,
+
+    url_prefix="/api/risk"
+)
+
+app.register_blueprint(
+
+    liveness_bp,
+
+    url_prefix="/api/liveness"
 )
 
 # =========================================================
@@ -82,7 +114,13 @@ def home():
 
             "/api/behavior",
 
-            "/api/ride"
+            "/api/ride",
+
+            "/api/verify",
+
+            "/api/risk",
+
+            "/api/liveness"
         ]
     }
 
@@ -119,6 +157,7 @@ def not_found(error):
 
         "message": "Route not found"
     }, 404
+
 
 @app.errorhandler(500)
 

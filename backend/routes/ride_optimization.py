@@ -1,4 +1,6 @@
-from flask import Blueprint, request, jsonify
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import List
 
 from ai_models.ride_optimization.ride_manager import (
     RideManager
@@ -9,258 +11,110 @@ from ai_models.ride_optimization.recommendation import (
 )
 
 # =========================================================
-# BLUEPRINT
+# ROUTER
 # =========================================================
 
-ride_optimization_bp = Blueprint(
-
-    "ride_optimization",
-
-    __name__
-)
+router = APIRouter()
 
 # =========================================================
-# GLOBAL INSTANCES
+# GLOBAL INSTANCE
 # =========================================================
 
 ride_manager = RideManager()
 
 # =========================================================
-# STANDARD RESPONSE
+# PYDANTIC MODEL
 # =========================================================
 
-def api_response(
+class RideRequest(BaseModel):
 
-    success,
-    message=None,
-    data=None,
-    status_code=200
-):
+    ride_id: str
 
-    response = {
+    source: List[float]
 
-        "success": success
-    }
+    destination: List[float]
 
-    if message:
+    start_time: str
 
-        response["message"] = message
+    share_allowed: bool
 
-    if data is not None:
-
-        response["data"] = data
-
-    return jsonify(response), status_code
-
-# =========================================================
-# VALIDATE RIDE INPUT
-# =========================================================
-
-def validate_ride_payload(data):
-
-    required_fields = [
-
-        "ride_id",
-        "source",
-        "destination",
-        "start_time",
-        "share_allowed",
-        "passenger_count"
-    ]
-
-    missing_fields = [
-
-        field
-
-        for field in required_fields
-
-        if field not in data
-    ]
-
-    if missing_fields:
-
-        return False, {
-
-            "missing_fields":
-                missing_fields
-        }
-
-    # =====================================================
-    # LOCATION VALIDATION
-    # =====================================================
-
-    for field in [
-
-        "source",
-        "destination"
-    ]:
-
-        location = data.get(field)
-
-        if (
-
-            not isinstance(location, list)
-
-            and not isinstance(location, tuple)
-
-        ):
-
-            return False, {
-
-                "message":
-                    f"{field} must be list/tuple"
-            }
-
-        if len(location) != 2:
-
-            return False, {
-
-                "message":
-                    f"{field} must contain lat/lon"
-            }
-
-    # =====================================================
-    # PASSENGER VALIDATION
-    # =====================================================
-
-    if data["passenger_count"] <= 0:
-
-        return False, {
-
-            "message":
-                "Invalid passenger count"
-        }
-
-    return True, None
+    passenger_count: int
 
 # =========================================================
 # HEALTH CHECK
 # =========================================================
 
-@ride_optimization_bp.route(
-
-    "/health",
-
-    methods=["GET"]
-)
+@router.get("/health")
 
 def health_check():
 
-    return api_response(
+    return {
 
-        True,
+        "success": True,
 
-        "Ride optimization service active"
-    )
+        "backend": "ACTIVE",
+
+        "optimization_engine": "RUNNING",
+
+        "server": "ONLINE"
+    }
 
 # =========================================================
 # CREATE RIDE
 # =========================================================
 
-@ride_optimization_bp.route(
+@router.post("/create")
 
-    "/create_ride",
-
-    methods=["POST"]
-)
-
-def create_ride():
+def create_ride(data: RideRequest):
 
     try:
 
-        data = request.get_json()
-
-        if not data:
-
-            return api_response(
-
-                False,
-
-                "No JSON data received",
-
-                status_code=400
-            )
-
-        # =================================================
-        # VALIDATION
-        # =================================================
-
-        is_valid, error = (
-            validate_ride_payload(data)
-        )
-
-        if not is_valid:
-
-            return api_response(
-
-                False,
-
-                data=error,
-
-                status_code=400
-            )
-
-        # =================================================
-        # DUPLICATE CHECK
-        # =================================================
+        payload = data.dict()
 
         active_rides = (
             ride_manager.get_active_rides()
         )
 
-        if data["ride_id"] in active_rides:
+        if payload["ride_id"] in active_rides:
 
-            return api_response(
+            raise HTTPException(
 
-                False,
+                status_code=409,
 
-                "Ride ID already exists",
-
-                status_code=409
+                detail="Ride ID already exists"
             )
 
-        # =================================================
-        # CREATE RIDE
-        # =================================================
-
         ride = ride_manager.create_ride(
-            data
+            payload
         )
 
-        return api_response(
+        return {
 
-            True,
+            "success": True,
 
-            "Ride created successfully",
+            "message":
+                "Ride created successfully",
 
-            ride,
-
-            201
-        )
+            "data":
+                ride
+        }
 
     except Exception as error:
 
-        return api_response(
+        raise HTTPException(
 
-            False,
+            status_code=500,
 
-            str(error),
-
-            status_code=500
+            detail=str(error)
         )
 
 # =========================================================
 # START RIDE
 # =========================================================
 
-@ride_optimization_bp.route(
+@router.post("/start/{ride_id}")
 
-    "/start_ride/<ride_id>",
-
-    methods=["POST"]
-)
-
-def start_ride(ride_id):
+def start_ride(ride_id: str):
 
     try:
 
@@ -268,274 +122,76 @@ def start_ride(ride_id):
             ride_id
         )
 
-        return api_response(
-
-            result["success"],
-
-            data=result
-        )
+        return result
 
     except Exception as error:
 
-        return api_response(
+        raise HTTPException(
 
-            False,
+            status_code=500,
 
-            str(error),
-
-            status_code=500
+            detail=str(error)
         )
 
 # =========================================================
 # COMPLETE RIDE
 # =========================================================
 
-@ride_optimization_bp.route(
+@router.post("/complete/{ride_id}")
 
-    "/complete_ride/<ride_id>",
-
-    methods=["POST"]
-)
-
-def complete_ride(ride_id):
+def complete_ride(ride_id: str):
 
     try:
 
-        result = ride_manager.complete_ride(
-            ride_id
+        result = (
+            ride_manager.complete_ride(
+                ride_id
+            )
         )
 
-        return api_response(
-
-            result["success"],
-
-            data=result
-        )
+        return result
 
     except Exception as error:
 
-        return api_response(
+        raise HTTPException(
 
-            False,
+            status_code=500,
 
-            str(error),
-
-            status_code=500
+            detail=str(error)
         )
 
 # =========================================================
 # CANCEL RIDE
 # =========================================================
 
-@ride_optimization_bp.route(
+@router.post("/cancel/{ride_id}")
 
-    "/cancel_ride/<ride_id>",
-
-    methods=["POST"]
-)
-
-def cancel_ride(ride_id):
+def cancel_ride(ride_id: str):
 
     try:
-
-        result = ride_manager.cancel_ride(
-            ride_id
-        )
-
-        return api_response(
-
-            result["success"],
-
-            data=result
-        )
-
-    except Exception as error:
-
-        return api_response(
-
-            False,
-
-            str(error),
-
-            status_code=500
-        )
-
-# =========================================================
-# UPDATE LOCATION
-# =========================================================
-
-@ride_optimization_bp.route(
-
-    "/update_location/<ride_id>",
-
-    methods=["POST"]
-)
-
-def update_location(ride_id):
-
-    try:
-
-        data = request.get_json()
-
-        if not data:
-
-            return api_response(
-
-                False,
-
-                "No JSON data received",
-
-                status_code=400
-            )
-
-        location = data.get("location")
-
-        if not location:
-
-            return api_response(
-
-                False,
-
-                "location field required",
-
-                status_code=400
-            )
-
-        if len(location) != 2:
-
-            return api_response(
-
-                False,
-
-                "location must contain lat/lon",
-
-                status_code=400
-            )
 
         result = (
-
-            ride_manager.update_ride_location(
-
-                ride_id,
-
-                tuple(location)
+            ride_manager.cancel_ride(
+                ride_id
             )
         )
 
-        return api_response(
-
-            result["success"],
-
-            data=result
-        )
+        return result
 
     except Exception as error:
 
-        return api_response(
+        raise HTTPException(
 
-            False,
+            status_code=500,
 
-            str(error),
-
-            status_code=500
-        )
-
-# =========================================================
-# REOPTIMIZE SYSTEM
-# =========================================================
-
-@ride_optimization_bp.route(
-
-    "/reoptimize",
-
-    methods=["POST"]
-)
-
-def reoptimize():
-
-    try:
-
-        results = (
-
-            ride_manager
-            .trigger_reoptimization()
-        )
-
-        return api_response(
-
-            True,
-
-            "System reoptimized",
-
-            results
-        )
-
-    except Exception as error:
-
-        return api_response(
-
-            False,
-
-            str(error),
-
-            status_code=500
-        )
-
-# =========================================================
-# CLEANUP STALE RIDES
-# =========================================================
-
-@ride_optimization_bp.route(
-
-    "/cleanup",
-
-    methods=["POST"]
-)
-
-def cleanup():
-
-    try:
-
-        removed = (
-
-            ride_manager
-            .cleanup_stale_rides()
-        )
-
-        return api_response(
-
-            True,
-
-            "Cleanup completed",
-
-            {
-
-                "removed_rides":
-                    removed
-            }
-        )
-
-    except Exception as error:
-
-        return api_response(
-
-            False,
-
-            str(error),
-
-            status_code=500
+            detail=str(error)
         )
 
 # =========================================================
 # ACTIVE RIDES
 # =========================================================
 
-@ride_optimization_bp.route(
-
-    "/active_rides",
-
-    methods=["GET"]
-)
+@router.get("/active")
 
 def get_active_rides():
 
@@ -545,34 +201,27 @@ def get_active_rides():
             ride_manager.get_active_rides()
         )
 
-        return api_response(
+        return {
 
-            True,
+            "success": True,
 
-            data=rides
-        )
+            "data": rides
+        }
 
     except Exception as error:
 
-        return api_response(
+        raise HTTPException(
 
-            False,
+            status_code=500,
 
-            str(error),
-
-            status_code=500
+            detail=str(error)
         )
 
 # =========================================================
 # ACTIVE GROUPS
 # =========================================================
 
-@ride_optimization_bp.route(
-
-    "/active_groups",
-
-    methods=["GET"]
-)
+@router.get("/groups")
 
 def get_active_groups():
 
@@ -582,34 +231,27 @@ def get_active_groups():
             ride_manager.get_active_groups()
         )
 
-        return api_response(
+        return {
 
-            True,
+            "success": True,
 
-            data=groups
-        )
+            "data": groups
+        }
 
     except Exception as error:
 
-        return api_response(
+        raise HTTPException(
 
-            False,
+            status_code=500,
 
-            str(error),
-
-            status_code=500
+            detail=str(error)
         )
 
 # =========================================================
 # RECOMMENDATIONS
 # =========================================================
 
-@ride_optimization_bp.route(
-
-    "/recommendations",
-
-    methods=["GET"]
-)
+@router.get("/recommendations")
 
 def get_recommendations():
 
@@ -628,34 +270,27 @@ def get_recommendations():
             )
         )
 
-        return api_response(
+        return {
 
-            True,
+            "success": True,
 
-            data=recommendations
-        )
+            "data": recommendations
+        }
 
     except Exception as error:
 
-        return api_response(
+        raise HTTPException(
 
-            False,
+            status_code=500,
 
-            str(error),
-
-            status_code=500
+            detail=str(error)
         )
 
 # =========================================================
 # RIDE HISTORY
 # =========================================================
 
-@ride_optimization_bp.route(
-
-    "/ride_history",
-
-    methods=["GET"]
-)
+@router.get("/history")
 
 def get_ride_history():
 
@@ -665,20 +300,18 @@ def get_ride_history():
             ride_manager.get_ride_history()
         )
 
-        return api_response(
+        return {
 
-            True,
+            "success": True,
 
-            data=history
-        )
+            "data": history
+        }
 
     except Exception as error:
 
-        return api_response(
+        raise HTTPException(
 
-            False,
+            status_code=500,
 
-            str(error),
-
-            status_code=500
+            detail=str(error)
         )

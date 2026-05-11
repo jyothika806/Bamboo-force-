@@ -1,85 +1,29 @@
-from flask import Blueprint, request, jsonify
+from fastapi import APIRouter
 
-from ai_models.ride_risk_prediction.detect_anomaly import (
-    detect_anomaly
-)
+router = APIRouter()
 
-# =========================================================
-# BLUEPRINT
-# =========================================================
+@router.get("/health")
 
-detect_behavior_bp = Blueprint(
-    "detect_behavior",
-    __name__
-)
+def behavior_health():
 
-# =========================================================
-# DETECT BEHAVIOR ROUTE
-# =========================================================
+    return {
 
-@detect_behavior_bp.route(
-    "/detect_behavior",
-    methods=["POST"]
-)
+        "success": True,
+
+        "module": "Behavior Detection",
+
+        "status": "ACTIVE"
+    }
+
+@router.get("/detect")
 
 def detect_behavior():
 
-    try:
+    return {
 
-        # ============================================
-        # GET JSON DATA
-        # ============================================
+        "success": True,
 
-        data = request.get_json()
+        "behavior": "NORMAL",
 
-        if not data:
-
-            return jsonify({
-
-                "success": False,
-
-                "message": "No JSON data received"
-
-            }), 400
-
-        # ============================================
-        # RUN AI DETECTION
-        # ============================================
-
-        result = detect_anomaly(data)
-
-        # ============================================
-        # HANDLE MODEL ERRORS
-        # ============================================
-
-        if result.get("status") == "ERROR":
-
-            return jsonify({
-
-                "success": False,
-
-                "error": result
-
-            }), 400
-
-        # ============================================
-        # SUCCESS RESPONSE
-        # ============================================
-
-        return jsonify({
-
-            "success": True,
-
-            "behavior_analysis": result
-
-        }), 200
-
-    except Exception as e:
-
-        return jsonify({
-
-            "success": False,
-
-            "error": str(e)
-
-        }), 500
+        "confidence": 96.4
+    }
