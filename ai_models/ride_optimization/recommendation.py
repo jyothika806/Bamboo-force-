@@ -1,11 +1,12 @@
+# =========================================================
+# BAMBOO FORCE AI
+# AI RECOMMENDATION ENGINE
+# =========================================================
+
 from statistics import mean
 
-from ai_models.ride_optimization.ride_manager import (
-    RideManager
-)
-
 # =========================================================
-# CONFIGURATION
+# VEHICLE CONFIGURATION
 # =========================================================
 
 VEHICLE_BASE_COST = {
@@ -29,16 +30,6 @@ VEHICLE_CAPACITY = {
 # =========================================================
 
 class RecommendationEngine:
-
-    def __init__(
-
-        self,
-        ride_manager
-    ):
-
-        self.ride_manager = (
-            ride_manager
-        )
 
     # =====================================================
     # OCCUPANCY EFFICIENCY
@@ -101,7 +92,7 @@ class RecommendationEngine:
         )
 
     # =====================================================
-    # TRAFFIC IMPACT SCORE
+    # TRAFFIC REDUCTION SCORE
     # =====================================================
 
     def calculate_traffic_score(
@@ -229,9 +220,9 @@ class RecommendationEngine:
             )
         )
 
-        # =========================================
+        # =================================================
         # UNDERUTILIZATION
-        # =========================================
+        # =================================================
 
         if occupancy < 0.40:
 
@@ -263,9 +254,9 @@ class RecommendationEngine:
                         "Reduce congestion"
                 }
 
-        # =========================================
+        # =================================================
         # OVERUTILIZATION
-        # =========================================
+        # =================================================
 
         if occupancy > 0.90:
 
@@ -505,60 +496,52 @@ class RecommendationEngine:
                 "TRAFFIC_REDUCTION"
         }
 
-    # =====================================================
-    # GENERATE ALL RECOMMENDATIONS
-    # =====================================================
+# =========================================================
+# GLOBAL RECOMMENDATION FUNCTION
+# =========================================================
 
-    def generate_all_recommendations(self):
+def generate_recommendations(groups):
 
-        active_groups = (
+    engine = RecommendationEngine()
 
-            self.ride_manager
-            .get_active_groups()
-        )
+    passenger_recommendations = []
 
-        groups = list(
-            active_groups.values()
-        )
+    driver_recommendations = []
 
-        passenger_recommendations = []
+    for group in groups:
 
-        driver_recommendations = []
+        passenger_recommendations.append(
 
-        for group in groups:
-
-            passenger_recommendations.append(
-
-                self.generate_passenger_recommendation(
-                    group
-                )
-            )
-
-            driver_recommendations.append(
-
-                self.generate_driver_recommendation(
-                    group
-                )
-            )
-
-        system_recommendation = (
-
-            self.generate_system_recommendation(
-                groups
+            engine.generate_passenger_recommendation(
+                group
             )
         )
 
-        return {
+        driver_recommendations.append(
 
-            "passenger_recommendations":
-                passenger_recommendations,
+            engine.generate_driver_recommendation(
+                group
+            )
+        )
 
-            "driver_recommendations":
-                driver_recommendations,
+    system_recommendation = (
 
-            "system_recommendation":
-                system_recommendation
-        }
+        engine.generate_system_recommendation(
+            groups
+        )
+    )
+
+    return {
+
+        "passenger_recommendations":
+            passenger_recommendations,
+
+        "driver_recommendations":
+            driver_recommendations,
+
+        "system_recommendation":
+            system_recommendation
+    }
 
 # =========================================================
 # TESTING
@@ -566,86 +549,48 @@ class RecommendationEngine:
 
 if __name__ == "__main__":
 
-    manager = RideManager()
-
-    rides = [
+    sample_groups = [
 
         {
-            "ride_id": "R001",
 
-            "source": (
-                17.3850,
-                78.4867
-            ),
+            "group_id": "G001",
 
-            "destination": (
-                17.4435,
-                78.3772
-            ),
+            "rides": [
+                "R001",
+                "R002"
+            ],
 
-            "start_time": 10,
+            "passenger_count": 3,
 
-            "share_allowed": True,
+            "recommended_vehicle":
+                "AUTO",
 
-            "passenger_count": 1
+            "optimization_score":
+                0.92
         },
 
         {
-            "ride_id": "R002",
 
-            "source": (
-                17.3900,
-                78.4900
-            ),
+            "group_id": "G002",
 
-            "destination": (
-                17.4480,
-                78.3800
-            ),
+            "rides": [
+                "R003"
+            ],
 
-            "start_time": 12,
+            "passenger_count": 1,
 
-            "share_allowed": True,
+            "recommended_vehicle":
+                "BIKE",
 
-            "passenger_count": 2
-        },
-
-        {
-            "ride_id": "R003",
-
-            "source": (
-                17.5000,
-                78.6000
-            ),
-
-            "destination": (
-                17.7000,
-                78.9000
-            ),
-
-            "start_time": 50,
-
-            "share_allowed": True,
-
-            "passenger_count": 1
+            "optimization_score":
+                0.65
         }
     ]
 
-    for ride in rides:
-
-        manager.create_ride(
-            ride
-        )
-
-    manager.trigger_reoptimization()
-
-    engine = RecommendationEngine(
-        manager
-    )
-
     recommendations = (
-
-        engine.generate_all_recommendations()
+        generate_recommendations(
+            sample_groups
+        )
     )
 
     print("\n[PASSENGER RECOMMENDATIONS]\n")

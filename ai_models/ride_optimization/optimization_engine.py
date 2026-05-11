@@ -1,6 +1,25 @@
+# =========================================================
+# BAMBOO FORCE AI
+# FINAL URBAN MOBILITY OPTIMIZATION ENGINE
+# =========================================================
+
+import uuid
+import time
+
 from ai_models.ride_optimization.match_rides import (
-    match_rides,
-    add_ride
+    match_rides
+)
+
+from ai_models.ride_optimization.clustering import (
+    create_ride_clusters
+)
+
+from ai_models.ride_optimization.recommendation import (
+    generate_recommendations
+)
+
+from ai_models.ride_optimization.ride_manager import (
+    RideManager
 )
 
 # =========================================================
@@ -32,347 +51,783 @@ VEHICLE_FUEL_FACTOR = {
 }
 
 # =========================================================
-# OCCUPANCY EFFICIENCY
+# MAIN OPTIMIZATION ENGINE
 # =========================================================
 
-def calculate_occupancy_efficiency(group):
+class UrbanMobilityOptimizationEngine:
 
-    passengers = group[
-        "passenger_count"
-    ]
+    def __init__(self):
 
-    vehicle = group[
-        "recommended_vehicle"
-    ]
+        # =============================================
+        # CORE SYSTEMS
+        # =============================================
 
-    capacity = VEHICLE_CAPACITY[
-        vehicle
-    ]
-
-    occupancy_ratio = (
-        passengers / capacity
-    )
-
-    # ============================================
-    # UNDERUTILIZATION PENALTY
-    # ============================================
-
-    if occupancy_ratio < 0.40:
-
-        occupancy_ratio *= 0.50
-
-    return round(
-        occupancy_ratio,
-        4
-    )
-
-# =========================================================
-# TRAFFIC REDUCTION SCORE
-# =========================================================
-
-def calculate_traffic_reduction(group):
-
-    vehicle = group[
-        "recommended_vehicle"
-    ]
-
-    passengers = group[
-        "passenger_count"
-    ]
-
-    vehicles_saved = max(
-        0,
-        passengers - 1
-    )
-
-    traffic_impact = (
-        VEHICLE_TRAFFIC_IMPACT[
-            vehicle
-        ]
-    )
-
-    score = (
-
-        vehicles_saved
-        * (1 - traffic_impact)
-    )
-
-    return round(
-        min(1.0, score / 5),
-        4
-    )
-
-# =========================================================
-# FUEL EFFICIENCY
-# =========================================================
-
-def calculate_fuel_efficiency(group):
-
-    vehicle = group[
-        "recommended_vehicle"
-    ]
-
-    passengers = group[
-        "passenger_count"
-    ]
-
-    fuel_factor = (
-        VEHICLE_FUEL_FACTOR[
-            vehicle
-        ]
-    )
-
-    efficiency = (
-        passengers / fuel_factor
-    )
-
-    return round(
-        min(1.0, efficiency / 3),
-        4
-    )
-
-# =========================================================
-# CONGESTION PENALTY
-# =========================================================
-
-def calculate_congestion_penalty(group):
-
-    vehicle = group[
-        "recommended_vehicle"
-    ]
-
-    passengers = group[
-        "passenger_count"
-    ]
-
-    if vehicle == "BIKE" and passengers == 1:
-
-        return 0.30
-
-    elif vehicle == "AUTO" and passengers < 2:
-
-        return 0.20
-
-    elif vehicle == "CAB" and passengers < 2:
-
-        return 0.35
-
-    return 0.05
-
-# =========================================================
-# DELAY PENALTY
-# =========================================================
-
-def calculate_delay_penalty(group):
-
-    ride_count = len(
-        group["rides"]
-    )
-
-    penalty = (
-        ride_count * 0.05
-    )
-
-    return round(
-        min(0.30, penalty),
-        4
-    )
-
-# =========================================================
-# FINAL OPTIMIZATION SCORE
-# =========================================================
-
-def calculate_optimization_score(group):
-
-    occupancy_score = (
-        calculate_occupancy_efficiency(
-            group
+        self.ride_manager = (
+            RideManager()
         )
-    )
 
-    traffic_score = (
-        calculate_traffic_reduction(
-            group
+        # =============================================
+        # ENGINE STORAGE
+        # =============================================
+
+        self.active_groups = {}
+
+        self.optimization_history = []
+
+        self.system_started_at = (
+            time.time()
         )
-    )
 
-    fuel_score = (
-        calculate_fuel_efficiency(
-            group
+    # =====================================================
+    # ADD NEW RIDE
+    # =====================================================
+
+    def add_new_ride(
+        self,
+        ride_data
+    ):
+
+        # =============================================
+        # AUTO GENERATE RIDE ID
+        # =============================================
+
+        ride_id = ride_data.get(
+            "ride_id",
+            str(uuid.uuid4())[:8]
         )
-    )
 
-    congestion_penalty = (
-        calculate_congestion_penalty(
-            group
+        ride_data["ride_id"] = ride_id
+
+        # =============================================
+        # DEFAULT VALUES
+        # =============================================
+
+        ride_data.setdefault(
+            "passenger_count",
+            1
         )
-    )
 
-    delay_penalty = (
-        calculate_delay_penalty(
-            group
+        ride_data.setdefault(
+            "share_allowed",
+            True
         )
-    )
 
-    # ============================================
-    # FINAL WEIGHTED SCORE
-    # ============================================
+        ride_data["created_at"] = (
+            time.time()
+        )
 
-    final_score = (
+        # =============================================
+        # CREATE RIDE
+        # =============================================
 
-        occupancy_score * 0.35
+        result = (
 
-        + traffic_score * 0.30
+            self.ride_manager
+            .create_ride(
+                ride_data
+            )
+        )
 
-        + fuel_score * 0.25
+        return result
 
-        - congestion_penalty
+    # =====================================================
+    # GET ACTIVE RIDES
+    # =====================================================
 
-        - delay_penalty
-    )
+    def get_active_rides(self):
 
-    return round(
+        return (
 
-        max(
+            self.ride_manager
+            .get_active_rides()
+        )
+
+    # =====================================================
+    # FIND BEST MATCHES
+    # =====================================================
+
+    def find_best_matches(self):
+
+        active_rides = (
+            self.get_active_rides()
+        )
+
+        if len(active_rides) <= 1:
+
+            return []
+
+        return match_rides()
+
+    # =====================================================
+    # CREATE OPTIMIZED GROUPS
+    # =====================================================
+
+    def generate_optimized_groups(self):
+
+        active_rides = (
+            self.get_active_rides()
+        )
+
+        if not active_rides:
+
+            return []
+
+        groups = create_ride_clusters()
+
+        self.active_groups = {
+
+            group["cluster_id"]: group
+            for group in groups
+        }
+
+        return groups
+
+    # =====================================================
+    # GENERATE AI RECOMMENDATIONS
+    # =====================================================
+
+    def generate_ai_recommendations(self):
+
+        groups = list(
+            self.active_groups.values()
+        )
+
+        if not groups:
+
+            return {}
+
+        return generate_recommendations(
+            groups
+        )
+
+    # =====================================================
+    # OCCUPANCY EFFICIENCY
+    # =====================================================
+
+    def calculate_occupancy_efficiency(
+        self,
+        group
+    ):
+
+        passengers = group.get(
+            "passenger_count",
+            1
+        )
+
+        vehicle = group.get(
+            "recommended_vehicle",
+            "BIKE"
+        )
+
+        capacity = VEHICLE_CAPACITY.get(
+            vehicle,
+            1
+        )
+
+        occupancy_ratio = (
+            passengers / capacity
+        )
+
+        if occupancy_ratio < 0.40:
+
+            occupancy_ratio *= 0.50
+
+        return round(
+
+            min(
+                1.0,
+                occupancy_ratio
+            ),
+
+            4
+        )
+
+    # =====================================================
+    # TRAFFIC REDUCTION
+    # =====================================================
+
+    def calculate_traffic_reduction(
+        self,
+        group
+    ):
+
+        vehicle = group.get(
+            "recommended_vehicle",
+            "BIKE"
+        )
+
+        passengers = group.get(
+            "passenger_count",
+            1
+        )
+
+        vehicles_saved = max(
             0,
-            min(1, final_score)
-        ),
+            passengers - 1
+        )
 
-        4
-    )
+        traffic_impact = (
 
-# =========================================================
-# OPTIMIZE GROUPS
-# =========================================================
+            VEHICLE_TRAFFIC_IMPACT.get(
+                vehicle,
+                0.90
+            )
+        )
 
-def optimize_groups(groups):
+        score = (
 
-    optimized_groups = []
+            vehicles_saved
+            * (1 - traffic_impact)
+        )
 
-    total_passengers = 0
+        return round(
 
-    optimized_vehicle_count = len(
-        groups
-    )
+            min(
+                1.0,
+                score / 5
+            ),
 
-    # ============================================
-    # PROCESS GROUPS
-    # ============================================
+            4
+        )
 
-    for group in groups:
+    # =====================================================
+    # FUEL EFFICIENCY
+    # =====================================================
 
-        total_passengers += group[
-            "passenger_count"
-        ]
+    def calculate_fuel_efficiency(
+        self,
+        group
+    ):
 
-        optimization_score = (
-            calculate_optimization_score(
+        vehicle = group.get(
+            "recommended_vehicle",
+            "BIKE"
+        )
+
+        passengers = group.get(
+            "passenger_count",
+            1
+        )
+
+        fuel_factor = (
+
+            VEHICLE_FUEL_FACTOR.get(
+                vehicle,
+                1.0
+            )
+        )
+
+        efficiency = (
+            passengers / fuel_factor
+        )
+
+        return round(
+
+            min(
+                1.0,
+                efficiency / 3
+            ),
+
+            4
+        )
+
+    # =====================================================
+    # CONGESTION PENALTY
+    # =====================================================
+
+    def calculate_congestion_penalty(
+        self,
+        group
+    ):
+
+        vehicle = group.get(
+            "recommended_vehicle",
+            "BIKE"
+        )
+
+        passengers = group.get(
+            "passenger_count",
+            1
+        )
+
+        if vehicle == "BIKE" and passengers == 1:
+
+            return 0.30
+
+        if vehicle == "AUTO" and passengers < 2:
+
+            return 0.20
+
+        if vehicle == "CAB" and passengers < 2:
+
+            return 0.35
+
+        return 0.05
+
+    # =====================================================
+    # DELAY PENALTY
+    # =====================================================
+
+    def calculate_delay_penalty(
+        self,
+        group
+    ):
+
+        ride_count = len(
+
+            group.get(
+                "rides",
+                []
+            )
+        )
+
+        penalty = (
+            ride_count * 0.05
+        )
+
+        return round(
+
+            min(
+                0.30,
+                penalty
+            ),
+
+            4
+        )
+
+    # =====================================================
+    # FINAL OPTIMIZATION SCORE
+    # =====================================================
+
+    def calculate_optimization_score(
+        self,
+        group
+    ):
+
+        occupancy_score = (
+
+            self.calculate_occupancy_efficiency(
                 group
             )
         )
 
-        optimized_group = {
+        traffic_score = (
 
-            "group_id":
-                group["group_id"],
-
-            "rides":
-                group["rides"],
-
-            "recommended_vehicle":
-                group[
-                    "recommended_vehicle"
-                ],
-
-            "passenger_count":
-                group[
-                    "passenger_count"
-                ],
-
-            "occupancy_efficiency":
-                calculate_occupancy_efficiency(
-                    group
-                ),
-
-            "traffic_reduction":
-                calculate_traffic_reduction(
-                    group
-                ),
-
-            "fuel_efficiency":
-                calculate_fuel_efficiency(
-                    group
-                ),
-
-            "optimization_score":
-                optimization_score
-        }
-
-        optimized_groups.append(
-            optimized_group
-        )
-
-    # ============================================
-    # SYSTEM-WIDE METRICS
-    # ============================================
-
-    if total_passengers == 0:
-
-        traffic_reduction_ratio = 0
-
-    else:
-
-        traffic_reduction_ratio = (
-
-            1
-            - (
-                optimized_vehicle_count
-                / total_passengers
+            self.calculate_traffic_reduction(
+                group
             )
         )
 
-    system_metrics = {
+        fuel_score = (
 
-        "total_passengers":
-            total_passengers,
+            self.calculate_fuel_efficiency(
+                group
+            )
+        )
 
-        "vehicles_after_optimization":
-            optimized_vehicle_count,
+        congestion_penalty = (
 
-        "traffic_reduction_ratio":
-            round(
-                traffic_reduction_ratio,
-                4
+            self.calculate_congestion_penalty(
+                group
+            )
+        )
+
+        delay_penalty = (
+
+            self.calculate_delay_penalty(
+                group
+            )
+        )
+
+        final_score = (
+
+            occupancy_score * 0.35
+
+            + traffic_score * 0.30
+
+            + fuel_score * 0.25
+
+            - congestion_penalty
+
+            - delay_penalty
+        )
+
+        return round(
+
+            max(
+                0,
+                min(1, final_score)
             ),
 
-        "estimated_congestion_reduction":
-            round(
-                traffic_reduction_ratio
-                * 0.8,
-                4
+            4
+        )
+
+    # =====================================================
+    # ENABLE DYNAMIC RIDE CHAINING
+    # =====================================================
+
+    def enable_dynamic_chaining(self):
+
+        groups = list(
+            self.active_groups.values()
+        )
+
+        optimized_groups = []
+
+        for group in groups:
+
+            passenger_count = group.get(
+                "passenger_count",
+                1
             )
-    }
 
-    return {
+            group[
+                "ride_chain_possible"
+            ] = (
+                passenger_count >= 2
+            )
 
-        "optimized_groups":
-            optimized_groups,
+            group[
+                "occupancy_efficiency"
+            ] = (
+                self.calculate_occupancy_efficiency(
+                    group
+                )
+            )
 
-        "system_metrics":
-            system_metrics
-    }
+            group[
+                "traffic_reduction"
+            ] = (
+                self.calculate_traffic_reduction(
+                    group
+                )
+            )
+
+            group[
+                "fuel_efficiency"
+            ] = (
+                self.calculate_fuel_efficiency(
+                    group
+                )
+            )
+
+            group[
+                "optimization_score"
+            ] = (
+                self.calculate_optimization_score(
+                    group
+                )
+            )
+
+            optimized_groups.append(
+                group
+            )
+
+        return optimized_groups
+
+    # =====================================================
+    # SYSTEM TRAFFIC IMPACT
+    # =====================================================
+
+    def calculate_system_traffic_impact(self):
+
+        total_rides = len(
+            self.get_active_rides()
+        )
+
+        total_groups = len(
+            self.active_groups
+        )
+
+        if total_rides == 0:
+
+            return {
+
+                "traffic_reduction_score":
+                    0.0,
+
+                "estimated_vehicle_reduction":
+                    0,
+
+                "estimated_congestion_reduction":
+                    0.0
+            }
+
+        saved_vehicles = max(
+
+            0,
+
+            total_rides
+            - total_groups
+        )
+
+        reduction_score = (
+            saved_vehicles / total_rides
+        )
+
+        congestion_reduction = (
+            reduction_score * 0.80
+        )
+
+        return {
+
+            "traffic_reduction_score":
+                round(
+                    reduction_score,
+                    4
+                ),
+
+            "estimated_vehicle_reduction":
+                saved_vehicles,
+
+            "estimated_congestion_reduction":
+                round(
+                    congestion_reduction,
+                    4
+                )
+        }
+
+    # =====================================================
+    # RUN COMPLETE AI OPTIMIZATION
+    # =====================================================
+
+    def run_dynamic_optimization(self):
+
+        # =============================================
+        # STEP 1 — MATCH RIDES
+        # =============================================
+
+        matches = (
+            self.find_best_matches()
+        )
+
+        # =============================================
+        # STEP 2 — CREATE GROUPS
+        # =============================================
+
+        self.generate_optimized_groups()
+
+        # =============================================
+        # STEP 3 — AI RECOMMENDATIONS
+        # =============================================
+
+        recommendations = (
+
+            self.generate_ai_recommendations()
+        )
+
+        # =============================================
+        # STEP 4 — DYNAMIC CHAINING
+        # =============================================
+
+        optimized_groups = (
+
+            self.enable_dynamic_chaining()
+        )
+
+        # =============================================
+        # STEP 5 — TRAFFIC ANALYSIS
+        # =============================================
+
+        traffic_analysis = (
+
+            self.calculate_system_traffic_impact()
+        )
+
+        # =============================================
+        # FINAL RESULT
+        # =============================================
+
+        result = {
+
+            "system_status":
+                "ACTIVE",
+
+            "optimization_timestamp":
+                time.time(),
+
+            "total_active_rides":
+                len(
+                    self.get_active_rides()
+                ),
+
+            "total_groups":
+                len(
+                    self.active_groups
+                ),
+
+            "matches":
+                matches,
+
+            "optimized_groups":
+                optimized_groups,
+
+            "recommendations":
+                recommendations,
+
+            "traffic_analysis":
+                traffic_analysis
+        }
+
+        # =============================================
+        # STORE HISTORY
+        # =============================================
+
+        self.optimization_history.append(
+            result
+        )
+
+        return result
+
+    # =====================================================
+    # COMPLETE RIDE
+    # =====================================================
+
+    def complete_ride(
+        self,
+        ride_id
+    ):
+
+        return (
+
+            self.ride_manager
+            .complete_ride(
+                ride_id
+            )
+        )
+
+    # =====================================================
+    # CANCEL RIDE
+    # =====================================================
+
+    def cancel_ride(
+        self,
+        ride_id
+    ):
+
+        return (
+
+            self.ride_manager
+            .cancel_ride(
+                ride_id
+            )
+        )
+
+    # =====================================================
+    # UPDATE RIDE LOCATION
+    # =====================================================
+
+    def update_ride_location(
+
+        self,
+        ride_id,
+        location
+    ):
+
+        return (
+
+            self.ride_manager
+            .update_ride_location(
+
+                ride_id,
+
+                location
+            )
+        )
+
+    # =====================================================
+    # CLEANUP SYSTEM
+    # =====================================================
+
+    def cleanup_system(self):
+
+        return (
+
+            self.ride_manager
+            .cleanup_stale_rides()
+        )
+
+    # =====================================================
+    # GET ACTIVE GROUPS
+    # =====================================================
+
+    def get_active_groups(self):
+
+        return self.active_groups
+
+    # =====================================================
+    # GET RIDE HISTORY
+    # =====================================================
+
+    def get_ride_history(self):
+
+        return (
+
+            self.ride_manager
+            .get_ride_history()
+        )
+
+    # =====================================================
+    # SYSTEM METRICS
+    # =====================================================
+
+    def get_system_metrics(self):
+
+        total_rides = len(
+            self.get_active_rides()
+        )
+
+        total_groups = len(
+            self.active_groups
+        )
+
+        occupancy = 0
+
+        if total_groups > 0:
+
+            occupancy = (
+                total_rides / total_groups
+            )
+
+        return {
+
+            "system_status":
+                "RUNNING",
+
+            "system_uptime_seconds":
+                round(
+
+                    time.time()
+                    - self.system_started_at,
+
+                    2
+                ),
+
+            "total_rides":
+                total_rides,
+
+            "total_groups":
+                total_groups,
+
+            "average_occupancy":
+                round(
+                    occupancy,
+                    2
+                ),
+
+            "optimization_cycles":
+                len(
+                    self.optimization_history
+                )
+        }
 
 # =========================================================
-# RUN DYNAMIC OPTIMIZATION
+# GLOBAL ENGINE INSTANCE
 # =========================================================
 
-def run_dynamic_optimization():
-
-    groups = match_rides()
-
-    return optimize_groups(
-        groups
-    )
+optimization_engine = (
+    UrbanMobilityOptimizationEngine()
+)
 
 # =========================================================
 # TESTING
@@ -380,110 +835,98 @@ def run_dynamic_optimization():
 
 if __name__ == "__main__":
 
-    # ============================================
-    # TEST RIDES
-    # ============================================
-
-    test_rides = [
+    sample_rides = [
 
         {
+
             "ride_id": "R001",
 
-            "source": (
+            "source": [
                 17.3850,
                 78.4867
-            ),
+            ],
 
-            "destination": (
+            "destination": [
                 17.4435,
                 78.3772
-            ),
+            ],
 
-            "start_time": 10,
+            "passenger_count": 2,
 
-            "share_allowed": True,
-
-            "passenger_count": 1
+            "share_allowed": True
         },
 
         {
+
             "ride_id": "R002",
 
-            "source": (
-                17.3900,
-                78.4900
-            ),
+            "source": [
+                17.3870,
+                78.4800
+            ],
 
-            "destination": (
-                17.4480,
-                78.3800
-            ),
+            "destination": [
+                17.4410,
+                78.3790
+            ],
 
-            "start_time": 12,
+            "passenger_count": 1,
 
-            "share_allowed": True,
-
-            "passenger_count": 2
+            "share_allowed": True
         },
 
         {
+
             "ride_id": "R003",
 
-            "source": (
+            "source": [
                 17.5000,
                 78.6000
-            ),
+            ],
 
-            "destination": (
-                17.7000,
-                78.9000
-            ),
+            "destination": [
+                17.6500,
+                78.7200
+            ],
 
-            "start_time": 50,
+            "passenger_count": 1,
 
-            "share_allowed": True,
-
-            "passenger_count": 1
+            "share_allowed": False
         }
     ]
 
-    # ============================================
-    # ADD RIDES
-    # ============================================
+    # =============================================
+    # LOAD RIDES
+    # =============================================
 
-    for ride in test_rides:
+    for ride in sample_rides:
 
-        add_ride(
+        optimization_engine.add_new_ride(
             ride
         )
 
-    # ============================================
+    # =============================================
     # RUN OPTIMIZATION
-    # ============================================
+    # =============================================
 
-    results = run_dynamic_optimization()
+    result = (
 
-    # ============================================
-    # PRINT GROUP RESULTS
-    # ============================================
+        optimization_engine
+        .run_dynamic_optimization()
+    )
 
-    print("\n[OPTIMIZED GROUPS]\n")
+    # =============================================
+    # OUTPUT
+    # =============================================
 
-    for group in results[
-        "optimized_groups"
-    ]:
+    print("\n[SMART CITY AI OPTIMIZATION RESULT]\n")
 
-        print(group)
-
-    # ============================================
-    # PRINT SYSTEM METRICS
-    # ============================================
+    print(result)
 
     print("\n[SYSTEM METRICS]\n")
 
     print(
 
-        results[
-            "system_metrics"
-        ]
+        optimization_engine
+        .get_system_metrics()
     )

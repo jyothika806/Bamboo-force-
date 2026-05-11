@@ -1,14 +1,18 @@
+# =========================================================
+# BAMBOO FORCE AI
+# REAL-TIME RIDE LIFECYCLE MANAGER
+# =========================================================
+
 import time
 import threading
 
 from ai_models.ride_optimization.match_rides import (
     add_ride,
-    remove_ride,
-    match_rides
+    remove_ride
 )
 
-from ai_models.ride_optimization.optimization_engine import (
-    optimize_groups
+from ai_models.ride_optimization.clustering import (
+    create_ride_clusters
 )
 
 # =========================================================
@@ -28,6 +32,8 @@ class RideManager:
         self.active_groups = {}
 
         self.active_passengers = {}
+
+        self.completed_rides = {}
 
         self.ride_history = []
 
@@ -57,11 +63,14 @@ class RideManager:
 
         event = {
 
-            "event": event_type,
+            "event":
+                event_type,
 
-            "ride_id": ride_id,
+            "ride_id":
+                ride_id,
 
-            "timestamp": time.time(),
+            "timestamp":
+                time.time(),
 
             "metadata":
                 metadata or {}
@@ -100,16 +109,52 @@ class RideManager:
     # CREATE RIDE
     # =====================================================
 
-    def create_ride(self, ride):
+    def create_ride(
+        self,
+        ride
+    ):
 
         with self.lock:
 
+            ride_id = ride.get(
+                "ride_id"
+            )
+
+            if not ride_id:
+
+                return {
+
+                    "success": False,
+
+                    "message":
+                        "Ride ID missing"
+                }
+
+            # =====================================
+            # DEFAULT VALUES
+            # =====================================
+
+            ride.setdefault(
+                "passenger_count",
+                1
+            )
+
+            ride.setdefault(
+                "share_allowed",
+                True
+            )
+
             ride["status"] = "WAITING"
 
-            ride["created_at"] = time.time()
+            ride["created_at"] = (
+                time.time()
+            )
 
             ride["current_location"] = (
-                ride["source"]
+                ride.get(
+                    "source",
+                    (0, 0)
+                )
             )
 
             # =====================================
@@ -117,14 +162,16 @@ class RideManager:
             # =====================================
 
             self.active_rides[
-                ride["ride_id"]
+                ride_id
             ] = ride
 
             # =====================================
             # STORE GLOBALLY
             # =====================================
 
-            add_ride(ride)
+            add_ride(
+                ride
+            )
 
             # =====================================
             # REGISTER PASSENGERS
@@ -137,20 +184,20 @@ class RideManager:
             )
 
             for index in range(
-
                 passenger_count
             ):
 
                 passenger_id = (
 
-                    f"{ride['ride_id']}"
-                    f"_P{index+1}"
+                    f"{ride_id}"
+                    f"_P{index + 1}"
                 )
 
                 self.register_passenger(
 
                     passenger_id,
-                    ride["ride_id"]
+
+                    ride_id
                 )
 
             # =====================================
@@ -161,26 +208,42 @@ class RideManager:
 
                 "RIDE_CREATED",
 
-                ride["ride_id"]
+                ride_id
             )
 
         # =========================================
-        # DYNAMIC RE-OPTIMIZATION
+        # DYNAMIC REOPTIMIZATION
         # =========================================
 
         self.trigger_reoptimization()
 
-        return ride
+        return {
+
+            "success": True,
+
+            "ride_id":
+                ride_id,
+
+            "status":
+                "WAITING"
+        }
 
     # =====================================================
     # START RIDE
     # =====================================================
 
-    def start_ride(self, ride_id):
+    def start_ride(
+        self,
+        ride_id
+    ):
 
         with self.lock:
 
-            if ride_id not in self.active_rides:
+            ride = self.active_rides.get(
+                ride_id
+            )
+
+            if not ride:
 
                 return {
 
@@ -190,9 +253,13 @@ class RideManager:
                         "Ride not found"
                 }
 
-            self.active_rides[
-                ride_id
-            ]["status"] = "IN_PROGRESS"
+            ride["status"] = (
+                "IN_PROGRESS"
+            )
+
+            ride["started_at"] = (
+                time.time()
+            )
 
             self.log_event(
 
@@ -205,20 +272,29 @@ class RideManager:
 
                 "success": True,
 
-                "ride_id": ride_id,
+                "ride_id":
+                    ride_id,
 
-                "status": "IN_PROGRESS"
+                "status":
+                    "IN_PROGRESS"
             }
 
     # =====================================================
     # COMPLETE RIDE
     # =====================================================
 
-    def complete_ride(self, ride_id):
+    def complete_ride(
+        self,
+        ride_id
+    ):
 
         with self.lock:
 
-            if ride_id not in self.active_rides:
+            ride = self.active_rides.get(
+                ride_id
+            )
+
+            if not ride:
 
                 return {
 
@@ -228,13 +304,25 @@ class RideManager:
                         "Ride not found"
                 }
 
-            self.active_rides[
+            ride["status"] = (
+                "COMPLETED"
+            )
+
+            ride["completed_at"] = (
+                time.time()
+            )
+
+            self.completed_rides[
                 ride_id
-            ]["status"] = "COMPLETED"
+            ] = ride
 
             remove_ride(
                 ride_id
             )
+
+            del self.active_rides[
+                ride_id
+            ]
 
             self.log_event(
 
@@ -243,28 +331,39 @@ class RideManager:
                 ride_id
             )
 
-            del self.active_rides[
-                ride_id
-            ]
+        # =========================================
+        # REOPTIMIZATION
+        # =========================================
 
-            return {
+        self.trigger_reoptimization()
 
-                "success": True,
+        return {
 
-                "ride_id": ride_id,
+            "success": True,
 
-                "status": "COMPLETED"
-            }
+            "ride_id":
+                ride_id,
+
+            "status":
+                "COMPLETED"
+        }
 
     # =====================================================
     # CANCEL RIDE
     # =====================================================
 
-    def cancel_ride(self, ride_id):
+    def cancel_ride(
+        self,
+        ride_id
+    ):
 
         with self.lock:
 
-            if ride_id not in self.active_rides:
+            ride = self.active_rides.get(
+                ride_id
+            )
+
+            if not ride:
 
                 return {
 
@@ -274,13 +373,21 @@ class RideManager:
                         "Ride not found"
                 }
 
-            self.active_rides[
-                ride_id
-            ]["status"] = "CANCELLED"
+            ride["status"] = (
+                "CANCELLED"
+            )
+
+            ride["cancelled_at"] = (
+                time.time()
+            )
 
             remove_ride(
                 ride_id
             )
+
+            del self.active_rides[
+                ride_id
+            ]
 
             self.log_event(
 
@@ -289,18 +396,22 @@ class RideManager:
                 ride_id
             )
 
-            del self.active_rides[
-                ride_id
-            ]
+        # =========================================
+        # REOPTIMIZATION
+        # =========================================
 
-            return {
+        self.trigger_reoptimization()
 
-                "success": True,
+        return {
 
-                "ride_id": ride_id,
+            "success": True,
 
-                "status": "CANCELLED"
-            }
+            "ride_id":
+                ride_id,
+
+            "status":
+                "CANCELLED"
+        }
 
     # =====================================================
     # UPDATE LIVE LOCATION
@@ -315,7 +426,11 @@ class RideManager:
 
         with self.lock:
 
-            if ride_id not in self.active_rides:
+            ride = self.active_rides.get(
+                ride_id
+            )
+
+            if not ride:
 
                 return {
 
@@ -325,10 +440,12 @@ class RideManager:
                         "Ride not found"
                 }
 
-            self.active_rides[
-                ride_id
-            ]["current_location"] = (
+            ride["current_location"] = (
                 location
+            )
+
+            ride["last_location_update"] = (
+                time.time()
             )
 
             self.log_event(
@@ -348,139 +465,23 @@ class RideManager:
 
                 "success": True,
 
-                "ride_id": ride_id,
+                "ride_id":
+                    ride_id,
 
-                "location": location
+                "location":
+                    location
             }
 
     # =====================================================
-    # JOIN EXISTING GROUP
-    # =====================================================
-
-    def join_group(
-
-        self,
-        group_id,
-        new_ride
-    ):
-
-        with self.lock:
-
-            if group_id not in self.active_groups:
-
-                return {
-
-                    "success": False,
-
-                    "message":
-                        "Group not found"
-                }
-
-            group = self.active_groups[
-                group_id
-            ]
-
-            vehicle_capacity = {
-
-                "BIKE": 1,
-                "AUTO": 3,
-                "CAB": 4,
-                "VAN": 7
-            }
-
-            vehicle = group[
-                "recommended_vehicle"
-            ]
-
-            current_count = group[
-                "passenger_count"
-            ]
-
-            additional_count = new_ride.get(
-
-                "passenger_count",
-                1
-            )
-
-            if (
-
-                current_count
-                + additional_count
-
-            ) > vehicle_capacity[
-                vehicle
-            ]:
-
-                return {
-
-                    "success": False,
-
-                    "message":
-                        "Vehicle full"
-                }
-
-            # =====================================
-            # CREATE NEW RIDE
-            # =====================================
-
-            self.create_ride(
-                new_ride
-            )
-
-            # =====================================
-            # UPDATE GROUP
-            # =====================================
-
-            group["rides"].append(
-
-                new_ride["ride_id"]
-            )
-
-            group["passenger_count"] += (
-                additional_count
-            )
-
-            self.log_event(
-
-                "PASSENGER_JOINED_GROUP",
-
-                new_ride["ride_id"],
-
-                {
-
-                    "group_id":
-                        group_id
-                }
-            )
-
-        # =========================================
-        # RE-OPTIMIZATION
-        # =========================================
-
-        self.trigger_reoptimization()
-
-        return {
-
-            "success": True,
-
-            "group_id": group_id
-        }
-
-    # =====================================================
-    # TRIGGER DYNAMIC RE-OPTIMIZATION
+    # DYNAMIC REOPTIMIZATION
     # =====================================================
 
     def trigger_reoptimization(self):
 
         with self.lock:
 
-            groups = match_rides()
-
             optimization_results = (
-
-                optimize_groups(
-                    groups
-                )
+                create_ride_clusters()
             )
 
             # =====================================
@@ -489,21 +490,24 @@ class RideManager:
 
             self.active_groups.clear()
 
-            for group in optimization_results[
-                "optimized_groups"
-            ]:
+            for group in optimization_results:
+
+                cluster_id = group.get(
+                    "cluster_id"
+                )
 
                 self.active_groups[
-                    group["group_id"]
+                    cluster_id
                 ] = group
 
                 # =================================
-                # UPDATE RIDE STATUS
+                # UPDATE MATCHED STATUS
                 # =================================
 
-                for ride_id in group[
-                    "rides"
-                ]:
+                for ride_id in group.get(
+                    "rides",
+                    []
+                ):
 
                     if (
 
@@ -546,7 +550,10 @@ class RideManager:
                 age = (
 
                     current_time
-                    - ride["created_at"]
+                    - ride.get(
+                        "created_at",
+                        current_time
+                    )
                 )
 
                 if (
@@ -590,9 +597,50 @@ class RideManager:
 
         return self.active_groups
 
+    def get_completed_rides(self):
+
+        return self.completed_rides
+
     def get_ride_history(self):
 
         return self.ride_history
+
+    # =====================================================
+    # SYSTEM METRICS
+    # =====================================================
+
+    def get_system_metrics(self):
+
+        return {
+
+            "active_rides":
+                len(
+                    self.active_rides
+                ),
+
+            "active_groups":
+                len(
+                    self.active_groups
+                ),
+
+            "completed_rides":
+                len(
+                    self.completed_rides
+                ),
+
+            "active_passengers":
+                len(
+                    self.active_passengers
+                ),
+
+            "history_events":
+                len(
+                    self.ride_history
+                ),
+
+            "system_status":
+                "RUNNING"
+        }
 
 # =========================================================
 # TESTING
@@ -602,13 +650,10 @@ if __name__ == "__main__":
 
     manager = RideManager()
 
-    # =============================================
-    # TEST RIDES
-    # =============================================
-
     rides = [
 
         {
+
             "ride_id": "R001",
 
             "source": (
@@ -629,6 +674,7 @@ if __name__ == "__main__":
         },
 
         {
+
             "ride_id": "R002",
 
             "source": (
@@ -646,32 +692,12 @@ if __name__ == "__main__":
             "share_allowed": True,
 
             "passenger_count": 2
-        },
-
-        {
-            "ride_id": "R003",
-
-            "source": (
-                17.5000,
-                78.6000
-            ),
-
-            "destination": (
-                17.7000,
-                78.9000
-            ),
-
-            "start_time": 50,
-
-            "share_allowed": True,
-
-            "passenger_count": 1
         }
     ]
 
-    # =============================================
+    # =====================================================
     # CREATE RIDES
-    # =============================================
+    # =====================================================
 
     for ride in rides:
 
@@ -679,68 +705,20 @@ if __name__ == "__main__":
             ride
         )
 
-    # =============================================
-    # ACTIVE GROUPS
-    # =============================================
+    print("\n[ACTIVE RIDES]\n")
+
+    print(
+        manager.get_active_rides()
+    )
 
     print("\n[ACTIVE GROUPS]\n")
 
     print(
-
         manager.get_active_groups()
     )
 
-    # =============================================
-    # UPDATE LOCATION
-    # =============================================
-
-    print("\n[LOCATION UPDATE]\n")
+    print("\n[SYSTEM METRICS]\n")
 
     print(
-
-        manager.update_ride_location(
-
-            "R001",
-
-            (
-                17.4000,
-                78.4900
-            )
-        )
+        manager.get_system_metrics()
     )
-
-    # =============================================
-    # START RIDE
-    # =============================================
-
-    print("\n[START RIDE]\n")
-
-    print(
-
-        manager.start_ride(
-            "R001"
-        )
-    )
-
-    # =============================================
-    # COMPLETE RIDE
-    # =============================================
-
-    print("\n[COMPLETE RIDE]\n")
-
-    print(
-
-        manager.complete_ride(
-            "R001"
-        )
-    )
-
-    # =============================================
-    # RIDE HISTORY
-    # =============================================
-
-    print("\n[RIDE HISTORY]\n")
-
-    for event in manager.get_ride_history():
-
-        print(event)

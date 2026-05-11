@@ -1,10 +1,13 @@
-from collections import defaultdict
+# =========================================================
+# BAMBOO FORCE AI
+# DYNAMIC RIDE MATCHING ENGINE
+# =========================================================
+
 from uuid import uuid4
 
 from ai_models.ride_optimization.route_similarity import (
     calculate_similarity
 )
-
 
 # =========================================================
 # CONFIGURATION
@@ -12,7 +15,7 @@ from ai_models.ride_optimization.route_similarity import (
 
 SIMILARITY_THRESHOLD = 0.70
 
-MAX_GROUP_SIZE = 4
+MAX_GROUP_PASSENGERS = 7
 
 VEHICLE_CAPACITY = {
 
@@ -23,7 +26,7 @@ VEHICLE_CAPACITY = {
 }
 
 # =========================================================
-# ACTIVE RIDE STORAGE
+# ACTIVE STORAGE
 # =========================================================
 
 ACTIVE_RIDES = {}
@@ -36,9 +39,30 @@ ACTIVE_GROUPS = {}
 
 def add_ride(ride):
 
+    ride_id = ride.get(
+        "ride_id"
+    )
+
+    if not ride_id:
+
+        return {
+
+            "status": "FAILED",
+
+            "message":
+                "Ride ID missing"
+        }
+
     ACTIVE_RIDES[
-        ride["ride_id"]
+        ride_id
     ] = ride
+
+    return {
+
+        "status": "RIDE_ADDED",
+
+        "ride_id": ride_id
+    }
 
 # =========================================================
 # REMOVE RIDE
@@ -48,34 +72,92 @@ def remove_ride(ride_id):
 
     if ride_id in ACTIVE_RIDES:
 
-        del ACTIVE_RIDES[ride_id]
+        del ACTIVE_RIDES[
+            ride_id
+        ]
+
+        return {
+
+            "status":
+                "RIDE_REMOVED",
+
+            "ride_id":
+                ride_id
+        }
+
+    return {
+
+        "status":
+            "NOT_FOUND",
+
+        "ride_id":
+            ride_id
+    }
 
 # =========================================================
-# GET VEHICLE TYPE
+# GET ACTIVE RIDES
+# =========================================================
+
+def get_active_rides():
+
+    return ACTIVE_RIDES
+
+# =========================================================
+# GET ACTIVE GROUPS
+# =========================================================
+
+def get_active_groups():
+
+    return ACTIVE_GROUPS
+
+# =========================================================
+# CLEAR ALL RIDES
+# =========================================================
+
+def clear_rides():
+
+    ACTIVE_RIDES.clear()
+
+    ACTIVE_GROUPS.clear()
+
+    return {
+
+        "status":
+            "ALL_RIDES_CLEARED"
+    }
+
+# =========================================================
+# RECOMMEND VEHICLE
 # =========================================================
 
 def recommend_vehicle(passenger_count):
 
     if passenger_count <= 1:
+
         return "BIKE"
 
     elif passenger_count <= 3:
+
         return "AUTO"
 
     elif passenger_count <= 4:
+
         return "CAB"
 
     return "VAN"
 
 # =========================================================
-# CHECK COMPATIBILITY
+# COMPATIBILITY CHECK
 # =========================================================
 
-def is_compatible(ride_a, ride_b):
+def is_compatible(
+    ride_a,
+    ride_b
+):
 
-    # ============================================
+    # =====================================================
     # SHARE PREFERENCE
-    # ============================================
+    # =====================================================
 
     if not ride_a.get(
         "share_allowed",
@@ -91,9 +173,9 @@ def is_compatible(ride_a, ride_b):
 
         return False
 
-    # ============================================
+    # =====================================================
     # PASSENGER LIMIT
-    # ============================================
+    # =====================================================
 
     total_passengers = (
 
@@ -108,12 +190,13 @@ def is_compatible(ride_a, ride_b):
         )
     )
 
-    if total_passengers > MAX_GROUP_SIZE:
+    if total_passengers > MAX_GROUP_PASSENGERS:
+
         return False
 
-    # ============================================
+    # =====================================================
     # ROUTE SIMILARITY
-    # ============================================
+    # =====================================================
 
     similarity_score = calculate_similarity(
 
@@ -143,27 +226,32 @@ def create_group(rides):
         total_passengers
     )
 
-    group_id = str(
-        uuid4()
-    )[:8]
+    vehicle_capacity = VEHICLE_CAPACITY[
+        vehicle
+    ]
 
     optimization_score = round(
 
-        min(
-            1.0,
-            total_passengers / 4
-        ),
+        total_passengers
+        / vehicle_capacity,
 
         2
     )
 
+    group_id = str(
+        uuid4()
+    )[:8]
+
     group = {
 
-        "group_id": group_id,
+        "group_id":
+            group_id,
 
         "rides": [
 
-            ride["ride_id"]
+            ride.get(
+                "ride_id"
+            )
 
             for ride in rides
         ],
@@ -175,7 +263,19 @@ def create_group(rides):
             vehicle,
 
         "optimization_score":
-            optimization_score
+            optimization_score,
+
+        "match_confidence":
+            optimization_score,
+
+        "estimated_vehicle_reduction":
+            max(
+                0,
+                total_passengers - 1
+            ),
+
+        "group_status":
+            "ACTIVE"
     }
 
     ACTIVE_GROUPS[
@@ -185,10 +285,12 @@ def create_group(rides):
     return group
 
 # =========================================================
-# DYNAMIC MATCHING ENGINE
+# MATCH RIDES
 # =========================================================
 
 def match_rides():
+
+    ACTIVE_GROUPS.clear()
 
     matched_groups = []
 
@@ -202,15 +304,16 @@ def match_rides():
         ride_ids
     )
 
-    # ============================================
-    # GREEDY DYNAMIC MATCHING
-    # ============================================
+    # =====================================================
+    # GREEDY MATCHING
+    # =====================================================
 
     for i in range(total_rides):
 
         ride_id_a = ride_ids[i]
 
         if ride_id_a in visited:
+
             continue
 
         ride_a = ACTIVE_RIDES[
@@ -228,15 +331,16 @@ def match_rides():
             ride_id_a
         )
 
-        # ========================================
-        # FIND BEST MATCHES
-        # ========================================
+        # =================================================
+        # FIND COMPATIBLE RIDES
+        # =================================================
 
         for j in range(i + 1, total_rides):
 
             ride_id_b = ride_ids[j]
 
             if ride_id_b in visited:
+
                 continue
 
             ride_b = ACTIVE_RIDES[
@@ -248,26 +352,27 @@ def match_rides():
                 1
             )
 
-            # ====================================
+            # =============================================
             # CAPACITY CHECK
-            # ====================================
+            # =============================================
 
             if (
 
                 current_passengers
                 + additional_passengers
 
-            ) > MAX_GROUP_SIZE:
+            ) > MAX_GROUP_PASSENGERS:
 
                 continue
 
-            # ====================================
-            # COMPATIBILITY
-            # ====================================
+            # =============================================
+            # COMPATIBILITY CHECK
+            # =============================================
 
             if is_compatible(
 
                 ride_a,
+
                 ride_b
             ):
 
@@ -283,9 +388,9 @@ def match_rides():
                     ride_id_b
                 )
 
-        # ========================================
-        # CREATE OPTIMIZED GROUP
-        # ========================================
+        # =================================================
+        # CREATE GROUP
+        # =================================================
 
         matched_groups.append(
 
@@ -297,22 +402,55 @@ def match_rides():
     return matched_groups
 
 # =========================================================
-# DYNAMIC REAL-TIME UPDATE
+# REAL-TIME UPDATE
 # =========================================================
 
 def update_ride_pool(new_ride):
 
-    # ============================================
-    # ADD NEW RIDE
-    # ============================================
-
-    add_ride(new_ride)
-
-    # ============================================
-    # RE-OPTIMIZE
-    # ============================================
+    add_ride(
+        new_ride
+    )
 
     return match_rides()
+
+# =========================================================
+# SYSTEM METRICS
+# =========================================================
+
+def get_matching_metrics():
+
+    total_rides = len(
+        ACTIVE_RIDES
+    )
+
+    total_groups = len(
+        ACTIVE_GROUPS
+    )
+
+    total_saved_vehicles = sum(
+
+        group.get(
+            "estimated_vehicle_reduction",
+            0
+        )
+
+        for group in ACTIVE_GROUPS.values()
+    )
+
+    return {
+
+        "total_active_rides":
+            total_rides,
+
+        "total_active_groups":
+            total_groups,
+
+        "estimated_vehicle_reduction":
+            total_saved_vehicles,
+
+        "system_status":
+            "RUNNING"
+    }
 
 # =========================================================
 # TESTING
@@ -383,9 +521,9 @@ if __name__ == "__main__":
         }
     ]
 
-    # ============================================
-    # ADD RIDES
-    # ============================================
+    # =====================================================
+    # LOAD RIDES
+    # =====================================================
 
     for ride in rides:
 
@@ -393,14 +531,20 @@ if __name__ == "__main__":
             ride
         )
 
-    # ============================================
-    # MATCH RIDES
-    # ============================================
+    # =====================================================
+    # RUN MATCHING
+    # =====================================================
 
     groups = match_rides()
 
-    print("\n[RESULT] Optimized Ride Groups:\n")
+    print("\n[OPTIMIZED RIDE GROUPS]\n")
 
     for group in groups:
 
         print(group)
+
+    print("\n[SYSTEM METRICS]\n")
+
+    print(
+        get_matching_metrics()
+    )

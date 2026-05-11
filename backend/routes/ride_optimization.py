@@ -5,7 +5,7 @@ from ai_models.ride_optimization.ride_manager import (
 )
 
 from ai_models.ride_optimization.recommendation import (
-    RecommendationEngine
+    generate_recommendations
 )
 
 # =========================================================
@@ -24,10 +24,6 @@ ride_optimization_bp = Blueprint(
 # =========================================================
 
 ride_manager = RideManager()
-
-recommendation_engine = RecommendationEngine(
-    ride_manager
-)
 
 # =========================================================
 # STANDARD RESPONSE
@@ -89,9 +85,9 @@ def validate_ride_payload(data):
                 missing_fields
         }
 
-    # =============================================
+    # =====================================================
     # LOCATION VALIDATION
-    # =============================================
+    # =====================================================
 
     for field in [
 
@@ -123,9 +119,9 @@ def validate_ride_payload(data):
                     f"{field} must contain lat/lon"
             }
 
-    # =============================================
+    # =====================================================
     # PASSENGER VALIDATION
-    # =============================================
+    # =====================================================
 
     if data["passenger_count"] <= 0:
 
@@ -185,9 +181,9 @@ def create_ride():
                 status_code=400
             )
 
-        # =========================================
+        # =================================================
         # VALIDATION
-        # =========================================
+        # =================================================
 
         is_valid, error = (
             validate_ride_payload(data)
@@ -204,9 +200,9 @@ def create_ride():
                 status_code=400
             )
 
-        # =========================================
+        # =================================================
         # DUPLICATE CHECK
-        # =========================================
+        # =================================================
 
         active_rides = (
             ride_manager.get_active_rides()
@@ -223,9 +219,9 @@ def create_ride():
                 status_code=409
             )
 
-        # =========================================
+        # =================================================
         # CREATE RIDE
-        # =========================================
+        # =================================================
 
         ride = ride_manager.create_ride(
             data
@@ -445,58 +441,6 @@ def update_location(ride_id):
         )
 
 # =========================================================
-# JOIN GROUP
-# =========================================================
-
-@ride_optimization_bp.route(
-
-    "/join_group/<group_id>",
-
-    methods=["POST"]
-)
-
-def join_group(group_id):
-
-    try:
-
-        data = request.get_json()
-
-        if not data:
-
-            return api_response(
-
-                False,
-
-                "No JSON data received",
-
-                status_code=400
-            )
-
-        result = ride_manager.join_group(
-
-            group_id,
-            data
-        )
-
-        return api_response(
-
-            result["success"],
-
-            data=result
-        )
-
-    except Exception as error:
-
-        return api_response(
-
-            False,
-
-            str(error),
-
-            status_code=500
-        )
-
-# =========================================================
 # REOPTIMIZE SYSTEM
 # =========================================================
 
@@ -671,10 +615,17 @@ def get_recommendations():
 
     try:
 
-        recommendations = (
+        groups = list(
 
-            recommendation_engine
-            .generate_all_recommendations()
+            ride_manager
+            .get_active_groups()
+            .values()
+        )
+
+        recommendations = (
+            generate_recommendations(
+                groups
+            )
         )
 
         return api_response(
