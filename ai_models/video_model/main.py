@@ -2,6 +2,9 @@
 
 import sys
 
+from sympy import im
+from ai_models.video_model import train
+from ai_models.video_model import test_video
 def show_menu():
     print("\n========== AI Face Detection System ==========")
     print("1. Train Model")
@@ -12,14 +15,16 @@ def show_menu():
 def train_model():
     try:
         print("\n[INFO] Starting training...")
-        import ai_models.video_model.train as train
+        from ai_models.video_model import train
+        train.main()
     except Exception as e:
         print(f"[ERROR] Training failed: {e}")
 
 def test_model():
     try:
         print("\n[INFO] Running face detection...")
-        import test_video
+        from ai_models.video_model import test_video
+        test_video.main()
     except Exception as e:
         print(f"[ERROR] Testing failed: {e}")
 
