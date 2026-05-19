@@ -54,10 +54,7 @@ def encode_face(
 
         # Convert BGR (OpenCV format) to RGB (required by face_recognition)
         rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        del image  # free memory
-
-        # Detect face locations using HOG model (CPU-friendly)
-        face_locations = face_recognition.face_locations(rgb, model="hog")
+        face_locations = face_recognition.face_locations(rgb)
 
         # Ensure exactly one face is detected (important for verification systems)
         if len(face_locations) != 1:

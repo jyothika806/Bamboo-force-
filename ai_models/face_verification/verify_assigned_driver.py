@@ -2,7 +2,7 @@ import os
 import cv2
 import pickle
 import face_recognition
-
+from ai_models.face_verification.liveness import verify_liveness
 # =========================================================
 # EMBEDDING PATH
 # =========================================================
@@ -123,6 +123,16 @@ def verify_assigned_driver(driver_id):
     # ============================================
     # FACE ENCODING
     # ============================================
+    # ============================================
+    # LIVENESS CHECK
+    # ============================================
+
+    liveness_result = verify_liveness()
+
+    if not liveness_result["verified"]:
+
+        print("Spoof attack detected")
+        return
 
     encodings = face_recognition.face_encodings(
         rgb_frame

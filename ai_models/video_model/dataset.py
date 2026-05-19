@@ -24,6 +24,11 @@ def load_video_fast(path, max_frames=10):
     cap.release()
 
     # pad frames
+     # Handle empty/corrupted videos
+    if len(frames) == 0:
+        return np.zeros((max_frames, 112, 112, 3), dtype=np.float32)
+
+    # Pad frames if video shorter than max_frames
     while len(frames) < max_frames:
         frames.append(frames[-1])
 

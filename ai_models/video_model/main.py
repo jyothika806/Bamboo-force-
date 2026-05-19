@@ -2,9 +2,7 @@
 
 import sys
 
-from sympy import im
-from ai_models.video_model import train
-from ai_models.video_model import test_video
+
 def show_menu():
     print("\n========== AI Face Detection System ==========")
     print("1. Train Model")

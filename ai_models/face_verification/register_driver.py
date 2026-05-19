@@ -2,6 +2,7 @@ import os
 import cv2
 import pickle
 import face_recognition
+from ai_models.face_verification.liveness import verify_liveness
 from flask import Blueprint, request, jsonify
 
 register_bp = Blueprint("register_driver", __name__)
@@ -48,7 +49,14 @@ def run_kyc_scan(driver_id):
         display = frame.copy()
 
         # Face detection
-        face_locations = face_recognition.face_locations(frame)
+        rgb_frame = cv2.cvtColor(
+            frame,
+            cv2.COLOR_BGR2RGB
+        )
+
+        face_locations = face_recognition.face_locations(
+            rgb_frame
+        )
 
         # Draw rectangles
         for (top, right, bottom, left) in face_locations:
@@ -180,7 +188,18 @@ def register_driver():
         # =================================================
         # FACE ENCODINGS
         # =================================================
+        # =================================================
+        # LIVENESS CHECK
+        # =================================================
 
+        liveness_result = verify_liveness()
+
+        if not liveness_result["verified"]:
+
+            return jsonify({
+                "success": False,
+                "message": "Spoof attack detected"
+            })
         id_encodings = face_recognition.face_encodings(id_img)
         live_encodings = face_recognition.face_encodings(live_img)
         

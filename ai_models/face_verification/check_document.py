@@ -20,7 +20,7 @@ image_path = os.path.join(
 if not os.path.exists(image_path):
 
     print("Document image not found")
-    exit()
+    raise SystemExit
 
 # =========================================================
 # LOAD IMAGE
@@ -31,7 +31,7 @@ image = cv2.imread(image_path)
 if image is None:
 
     print("Invalid image")
-    exit()
+    raise SystemExit
 
 # =========================================================
 # IMAGE SIZE CHECK
