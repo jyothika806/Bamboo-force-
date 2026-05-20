@@ -411,6 +411,12 @@ def update_ride_pool(new_ride):
         new_ride
     )
 
+    from ai_models.ride_optimization.match_rides import ACTIVE_RIDES
+
+    ACTIVE_RIDES.clear()
+
+    ACTIVE_RIDES.update(active_rides)
+
     return match_rides()
 
 # =========================================================
