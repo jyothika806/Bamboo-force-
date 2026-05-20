@@ -188,7 +188,7 @@ def detect_anomaly(input_data):
         # THRESHOLD
         # ============================================
 
-        THRESHOLD = 0.000537
+        THRESHOLD = 0.000750
 
         if anomaly_score > THRESHOLD:
 
