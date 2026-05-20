@@ -117,7 +117,7 @@ for _ in range(5000):
         [0,1],
         weights=[97,3]
     )[0]
-    driver_phone_useage = random.choices(
+    driver_phone_usage = random.choices(
         [0,1],
         weights=[95,5]
     )[0]
@@ -252,7 +252,7 @@ df = pd.DataFrame(data, columns=[
     'panic_button',
     'unsafe_stop',
     'unexpected_route_change',
-    'driver_phone_useage',
+    'driver_phone_usage',
 
     'safe'
 ])
