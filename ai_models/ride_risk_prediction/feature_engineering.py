@@ -10,9 +10,47 @@ class FeatureEngineer:
         self.output_file = output_file
 
     def load_data(self):
+
         print("[INFO] Loading dataset...")
-        self.df = pd.read_csv(self.input_file)
-        print(f"[INFO] Dataset loaded with {len(self.df)} records.")
+
+        self.df = pd.read_csv(
+            self.input_file
+        )
+
+        print(
+            f"[INFO] Dataset loaded with {len(self.df)} records."
+        )
+
+        # ====================================================
+        # REQUIRED COLUMNS VALIDATION
+        # ====================================================
+
+        required_columns = [
+
+            "avg_speed",
+            "sudden_braking",
+            "sharp_turns",
+            "panic_button",
+            "crash_detected",
+            "gps_signal_loss",
+            "unexpected_route_change",
+            "time"
+        ]
+
+        missing = [
+
+            col
+
+            for col in required_columns
+
+            if col not in self.df.columns
+        ]
+
+        if missing:
+
+            raise ValueError(
+                f"Missing columns: {missing}"
+            )
 
     # ---------------------------------------------------
     # Driving Aggression

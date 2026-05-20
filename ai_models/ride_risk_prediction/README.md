@@ -1,72 +1,217 @@
-## 📊 Dataset Overview
+# 🚀 AI Ride Risk Prediction System
 
-This dataset is **synthetically generated** to simulate real-world ride safety conditions.
+AI-powered ride safety intelligence and anomaly detection engine for Bamboo Force AI.
 
-It is used to train the AI model to predict whether a ride is **safe or unsafe**.
-
----
-## 📸 Dataset Preview
-
-![Dataset Preview](dataset_preview1.jpeg)
-![Dataset Preview](dataset_preview2.jpeg)
-![Dataset Preview](dataset_preview3.jpeg)
-![Dataset Preview](dataset_preview4.jpeg)
-
----
-## 🔗 Interactive Dataset
-
-View the dataset in interactive format:
-
-👉 https://docs.google.com/spreadsheets/d/1VyY4ONTvQa892PweqSD2IiS0xTs8qvxqguMQgIx_iMs/edit?usp=sharing
+This module analyzes ride telemetry, driver behavior, emergency indicators, and route patterns to detect suspicious or unsafe rides using deep learning.
 
 ---
 
-## 📁 File
+# 🌟 Features
 
-* `dataset.csv` → Main dataset used for training
-
----
-
-## 🧠 Features Description
-
-| Column        | Description                                  |
-| ------------- | -------------------------------------------- |
-| time          | 0 = Day, 1 = Night                           |
-| area_risk     | 0 = Low risk, 1 = Medium risk, 2 = High risk |
-| driver_rating | Driver rating (range: 1 to 5)                |
-| ride_type     | 0 = Bike, 1 = Auto, 2 = Car                  |
-| distance_km   | Distance of ride in kilometers               |
-| traffic_level | 0 = Low, 1 = Medium, 2 = High                |
-| weather       | 0 = Clear, 1 = Rain                          |
-| safe          | 1 = Safe ride, 0 = Unsafe ride               |
+- AI-Based Ride Risk Prediction
+- Deep Learning Anomaly Detection
+- Driver Behavior Analysis
+- Telemetry Risk Monitoring
+- Emergency Risk Detection
+- Route Risk Intelligence
+- Synthetic Ride Safety Dataset
+- Autoencoder-Based Risk Modeling
+- Real-Time Suspicious Ride Detection
 
 ---
 
-## ⚙️ Data Generation Logic
+# 🧠 AI Architecture
 
-The dataset is generated using a rule-based system that mimics real-world risk factors:
+The system uses:
 
-* Night time increases risk
-* High-risk areas increase risk
-* Low driver rating increases risk
-* Bike rides are less safe compared to cars
-* Rainy weather increases risk
-* Long distances and high traffic may increase risk
+- Feature Engineering
+- MinMax Normalization
+- PyTorch Autoencoder
+- Reconstruction Loss Analysis
+- Anomaly Detection
 
-A **risk score** is calculated using these conditions, and the final label (`safe`) is assigned accordingly.
-
----
-
-## 🎯 Purpose
-
-This dataset helps the model learn patterns between ride conditions and safety, enabling:
-
-* Safety prediction
-* Risk analysis
-* Intelligent ride recommendations
+Unsafe or suspicious rides generate higher reconstruction errors and are classified as anomalies.
 
 ---
 
-## 🏆 Note
+# 🏗️ Project Structure
 
-This is a **synthetic dataset**, created for demonstration and hackathon purposes, but designed to reflect realistic scenarios.
+```text
+ai_models/
+└── ride_risk_prediction/
+    ├── checkpoints/
+    │   ├── autoencoder.pth
+    │   └── scaler.save
+    │
+    ├── datasets/
+    │   ├── dataset.csv
+    │   └── engineered_dataset.csv
+    │
+    ├── autoencoder_model.py
+    ├── generate_data.py
+    ├── feature_engineering.py
+    ├── train.py
+    ├── detect_anomaly.py
+    └── README.md
+
+```
+# ⚙️ Technologies Used
+
+- Python
+- PyTorch
+- Pandas
+- NumPy
+- Scikit-learn
+- Joblib
+---
+
+# 📊 Dataset Information
+
+The dataset is synthetically generated to simulate:
+
+- risky driving behavior
+- emergency situations
+- unsafe route conditions
+- telemetry instability
+- suspicious ride activity
+---
+
+# 🧠 Engineered Features
+
+## Driving Aggression
+
+Calculated using:
+
+- speed
+- sudden braking
+- sharp turns
+## Driving Stability
+
+Measures ride smoothness and control.
+
+## Emergency Risk
+
+Uses:
+
+- panic button activity
+- crash detection
+## Telemetry Reliability
+
+Analyzes:
+
+- GPS signal loss
+- telemetry consistency
+## Suspicious Route Score
+
+Detects:
+
+- unexpected route changes
+- unsafe travel timing
+## Overall Risk Score
+
+Combined AI risk metric.
+
+# 🔄 AI Workflow
+
+```
+    Raw Ride Telemetry
+            ↓
+    Feature Engineering
+            ↓
+    Normalization
+            ↓
+    Autoencoder Training
+            ↓
+    Reconstruction Loss
+            ↓
+    Anomaly Detection
+            ↓
+    NORMAL / SUSPICIOUS
+
+```
+---
+
+# 🚀 Run the Project
+
+## 1️⃣ Generate Dataset
+- python -m ai_models.ride_risk_prediction.generate_data
+
+## 2️⃣ Run Feature Engineering
+- python -m ai_models.ride_risk_prediction.feature_engineering
+
+## 3️⃣ Train Autoencoder
+- python -m ai_models.ride_risk_prediction.train
+
+## 4️⃣ Detect Suspicious Ride
+- python -m ai_models.ride_risk_prediction.detect_anomaly
+
+---
+
+# 📥 Dataset Access
+
+Dataset files may not be uploaded to GitHub due to file size limitations.
+
+## Download Dataset
+
+- 👉 YOUR_ONEDRIVE_LINK_HERE
+
+---
+
+# 🧪 Example Detection Output
+```
+    {
+        "anomaly_score": 0.082341,
+        "threshold": 0.05,
+        "status": "SUSPICIOUS"
+    }
+```
+---
+
+# 🌍 Future Improvements
+
+- Real-time telemetry streaming
+- GPS route intelligence
+- Driver behavior forecasting
+- Live anomaly alerts
+- Deep sequential models (LSTM/Transformers)
+- Federated edge learning
+- Smart city safety integration
+- Real-time emergency response system
+
+---
+
+# ⚠️ Important Note
+
+This project currently uses a synthetic dataset created for educational, research, and hackathon purposes.
+
+# 👩‍💻 Author
+
+Kaveti Jyothika
+
+AI | Smart Mobility | Transportation Intelligence
+
+# 🚀 Bamboo Force AI
+
+Secure. Smart. Sustainable.
+
+
+---
+
+## 🚀 BIGGEST ML IMPROVEMENT YOU SHOULD DO LATER
+
+This one is IMPORTANT:
+
+## ✅ TRAIN ONLY ON SAFE RIDES
+
+Currently:
+you train autoencoder on everything.
+
+But anomaly detection should learn:
+
+```text
+NORMAL behavior only
+
+Then:
+anything abnormal becomes anomaly.
+
+That would make your project MUCH more technically correct.

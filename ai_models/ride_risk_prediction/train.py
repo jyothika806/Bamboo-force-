@@ -1,9 +1,10 @@
 import os
 import joblib
+import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
-
+from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.preprocessing import MinMaxScaler
 
@@ -105,7 +106,19 @@ print("\n[INFO] Normalizing features...")
 scaler = MinMaxScaler()
 
 scaled_data = scaler.fit_transform(df)
+# =========================================================
+# TRAIN / VALIDATION SPLIT
+# =========================================================
 
+train_data, val_data = train_test_split(
+    scaled_data,
+    test_size=0.2,
+    random_state=42,
+    shuffle=True
+)
+
+print(f"[INFO] Training Samples: {len(train_data)}")
+print(f"[INFO] Validation Samples: {len(val_data)}")
 # =========================================================
 # SAVE SCALER
 # =========================================================
@@ -121,26 +134,36 @@ print("[INFO] Scaler saved")
 # TENSOR CONVERSION
 # =========================================================
 
-tensor_data = torch.tensor(
-    scaled_data,
+train_tensor = torch.tensor(
+    train_data,
     dtype=torch.float32
 )
 
-dataset = TensorDataset(
-    tensor_data
+val_tensor = torch.tensor(
+    val_data,
+    dtype=torch.float32
 )
 
-dataloader = DataLoader(
-    dataset,
+train_dataset = TensorDataset(train_tensor)
+val_dataset = TensorDataset(val_tensor)
+
+
+train_loader = DataLoader(
+    train_dataset,
     batch_size=64,
     shuffle=True
 )
 
+val_loader = DataLoader(
+    val_dataset,
+    batch_size=64,
+    shuffle=False
+)
 # =========================================================
 # MODEL SETUP
 # =========================================================
 
-input_dim = tensor_data.shape[1]
+input_dim = train_tensor.shape[1]
 
 model = RideRiskAutoEncoder(
     input_dim=input_dim
@@ -174,7 +197,7 @@ for epoch in range(EPOCHS):
 
     total_loss = 0
 
-    for batch in dataloader:
+    for batch in train_loader:
 
         inputs = batch[0].to(DEVICE)
 
@@ -201,13 +224,37 @@ for epoch in range(EPOCHS):
 
         total_loss += loss.item()
 
-    avg_loss = total_loss / len(dataloader)
+    avg_loss = total_loss / len(train_loader)
 
     print(
         f"Epoch [{epoch+1}/{EPOCHS}] "
         f"Loss: {avg_loss:.6f}"
     )
+    # =========================================================
+    # VALIDATION
+    # =========================================================
 
+    model.eval()
+
+    val_loss = 0
+
+    with torch.no_grad():
+
+        for batch in val_loader:
+
+            inputs = batch[0].to(DEVICE)
+
+            outputs = model(inputs)
+
+            loss = criterion(outputs, inputs)
+
+            val_loss += loss.item()
+
+    avg_val_loss = val_loss / len(val_loader)
+
+    print(
+        f"Validation Loss: {avg_val_loss:.6f}"
+    )
     # ============================================
     # SAVE BEST MODEL
     # ============================================
@@ -238,3 +285,32 @@ print(
     f"\n[INFO] Best Reconstruction Loss: "
     f"{best_loss:.6f}"
 )
+# =========================================================
+# CALCULATE DYNAMIC THRESHOLD
+# =========================================================
+
+model.eval()
+
+all_losses = []
+
+with torch.no_grad():
+
+    for batch in train_loader:
+
+        inputs = batch[0].to(DEVICE)
+
+        outputs = model(inputs)
+
+        loss = criterion(outputs, inputs)
+
+        all_losses.append(loss.item())
+
+mean_loss = np.mean(all_losses)
+
+std_loss = np.std(all_losses)
+
+threshold = mean_loss + 2 * std_loss
+
+print(f"\n[INFO] Mean Loss: {mean_loss:.6f}")
+print(f"[INFO] Std Loss: {std_loss:.6f}")
+print(f"[INFO] Suggested Threshold: {threshold:.6f}")
