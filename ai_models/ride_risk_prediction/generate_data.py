@@ -211,7 +211,7 @@ for _ in range(5000):
     panic_button,
     unsafe_stop,
     unexpected_route_change,
-    driver_phone_useage,
+    driver_phone_usage,
 
     safe
 ])
