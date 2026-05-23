@@ -14,7 +14,9 @@ from ai_models.ride_optimization.match_rides import (
 from ai_models.ride_optimization.clustering import (
     create_ride_clusters
 )
-
+from ai_models.ride_optimization.state_manager import (
+    state
+)
 # =========================================================
 # RIDE MANAGER
 # =========================================================
@@ -27,15 +29,15 @@ class RideManager:
         # ACTIVE SYSTEM STATE
         # =========================================
 
-        self.active_rides = {}
+        state.active_rides = {}
 
-        self.active_groups = {}
+        state.active_clusters = {}
 
-        self.active_passengers = {}
+        state.active_passengers = {}
 
-        self.completed_rides = {}
+        state.completed_rides = {}
 
-        self.ride_history = []
+        state.ride_history = []
 
         # =========================================
         # THREAD-SAFE LOCK
@@ -47,7 +49,7 @@ class RideManager:
         # CONFIGURATION
         # =========================================
 
-        self.ride_expiry_seconds = 3600
+        state.ride_expiry_seconds = 3600
 
     # =====================================================
     # EVENT LOGGER
@@ -76,7 +78,7 @@ class RideManager:
                 metadata or {}
         }
 
-        self.ride_history.append(
+        state.ride_history.append(
             event
         )
 
@@ -91,7 +93,7 @@ class RideManager:
         ride_id
     ):
 
-        self.active_passengers[
+        state.active_passengers[
             passenger_id
         ] = {
 
@@ -156,12 +158,27 @@ class RideManager:
                     (0, 0)
                 )
             )
+            source = ride.get("source")
+            destination = ride.get("destination")
 
+            if not source or not destination:
+
+                return {
+                    "success": False,
+                    "message": "Missing coordinates"
+                }
+
+            if len(source) != 2 or len(destination) != 2:
+
+                return {
+                    "success": False,
+                    "message": "Invalid coordinates"
+                }
             # =====================================
             # STORE LOCALLY
             # =====================================
 
-            self.active_rides[
+            state.active_rides[
                 ride_id
             ] = ride
 
@@ -239,7 +256,7 @@ class RideManager:
 
         with self.lock:
 
-            ride = self.active_rides.get(
+            ride = state.active_rides.get(
                 ride_id
             )
 
@@ -290,7 +307,7 @@ class RideManager:
 
         with self.lock:
 
-            ride = self.active_rides.get(
+            ride = state.active_rides.get(
                 ride_id
             )
 
@@ -320,7 +337,7 @@ class RideManager:
                 ride_id
             )
 
-            del self.active_rides[
+            del state.active_rides[
                 ride_id
             ]
 
@@ -359,7 +376,7 @@ class RideManager:
 
         with self.lock:
 
-            ride = self.active_rides.get(
+            ride = state.active_rides.get(
                 ride_id
             )
 
@@ -385,7 +402,7 @@ class RideManager:
                 ride_id
             )
 
-            del self.active_rides[
+            del state.active_rides[
                 ride_id
             ]
 
@@ -426,7 +443,7 @@ class RideManager:
 
         with self.lock:
 
-            ride = self.active_rides.get(
+            ride = state.active_rides.get(
                 ride_id
             )
 
@@ -488,7 +505,7 @@ class RideManager:
             # RESET GROUPS
             # =====================================
 
-            self.active_groups.clear()
+            state.active_groups.clear()
 
             for group in optimization_results:
 
@@ -496,7 +513,7 @@ class RideManager:
                     "cluster_id"
                 )
 
-                self.active_groups[
+                state.active_groups[
                     cluster_id
                 ] = group
 
@@ -512,10 +529,10 @@ class RideManager:
                     if (
 
                         ride_id
-                        in self.active_rides
+                        in state.active_rides
                     ):
 
-                        self.active_rides[
+                        state.active_rides[
                             ride_id
                         ]["status"] = (
                             "MATCHED"
@@ -544,7 +561,7 @@ class RideManager:
 
             for ride_id, ride in list(
 
-                self.active_rides.items()
+                state.active_rides.items()
             ):
 
                 age = (
@@ -559,7 +576,7 @@ class RideManager:
                 if (
 
                     age
-                    > self.ride_expiry_seconds
+                    > state.ride_expiry_seconds
                 ):
 
                     stale_rides.append(
@@ -572,7 +589,7 @@ class RideManager:
                     ride_id
                 )
 
-                del self.active_rides[
+                del state.active_rides[
                     ride_id
                 ]
 
@@ -591,19 +608,19 @@ class RideManager:
 
     def get_active_rides(self):
 
-        return self.active_rides
+        return state.active_rides
 
     def get_active_groups(self):
 
-        return self.active_groups
+        return state.active_groups
 
     def get_completed_rides(self):
 
-        return self.completed_rides
+        return state.completed_rides
 
     def get_ride_history(self):
 
-        return self.ride_history
+        return state.ride_history
 
     # =====================================================
     # SYSTEM METRICS
@@ -615,27 +632,27 @@ class RideManager:
 
             "active_rides":
                 len(
-                    self.active_rides
+                    state.active_rides
                 ),
 
             "active_groups":
                 len(
-                    self.active_groups
+                    state.active_groups
                 ),
 
             "completed_rides":
                 len(
-                    self.completed_rides
+                    state.completed_rides
                 ),
 
             "active_passengers":
                 len(
-                    self.active_passengers
+                    state.active_passengers
                 ),
 
             "history_events":
                 len(
-                    self.ride_history
+                    state.ride_history
                 ),
 
             "system_status":

@@ -20,9 +20,36 @@ MIN_DIRECTION_SIMILARITY = 0.5
 
 SIMILARITY_THRESHOLD = 0.70
 
-MAX_TIME_DIFFERENCE = 15
+
 
 ZONE_PRECISION = 2
+# =========================================================
+# DYNAMIC TIME DIFFERENCE
+# =========================================================
+
+def get_dynamic_time_difference(current_hour):
+
+    # =============================================
+    # MORNING OFFICE/SCHOOL RUSH
+    # =============================================
+
+    if 7 <= current_hour <= 10:
+
+        return 10
+
+    # =============================================
+    # EVENING TRAFFIC RUSH
+    # =============================================
+
+    elif 17 <= current_hour <= 21:
+
+        return 12
+
+    # =============================================
+    # NORMAL HOURS
+    # =============================================
+
+    return 15
 
 MAX_GROUP_PASSENGERS = 7
 
@@ -170,29 +197,56 @@ def group_rides_by_zone(rides):
 
     return grouped_rides
 
-# =========================================================
-# TIME COMPATIBILITY
-# =========================================================
-
 def is_time_compatible(
     ride_a,
     ride_b
 ):
 
+    # =============================================
+    # GET START TIMES
+    # =============================================
+
+    start_time_a = ride_a.get(
+        "start_time",
+        0
+    )
+
+    start_time_b = ride_b.get(
+        "start_time",
+        0
+    )
+
+    # =============================================
+    # CURRENT HOUR
+    # =============================================
+
+    current_hour = min(
+
+        start_time_a,
+
+        start_time_b
+    )
+
+    # =============================================
+    # GET DYNAMIC LIMIT
+    # =============================================
+
+    allowed_difference = (
+        get_dynamic_time_difference(
+            current_hour
+        )
+    )
+
+    # =============================================
+    # FINAL CHECK
+    # =============================================
+
     return abs(
 
-        ride_a.get(
-            "start_time",
-            0
-        )
+        start_time_a
+        - start_time_b
 
-        - ride_b.get(
-            "start_time",
-            0
-        )
-
-    ) <= MAX_TIME_DIFFERENCE
-
+    ) <= allowed_difference
 # =========================================================
 # CALCULATE ROUTE SIMILARITY
 # =========================================================
@@ -201,27 +255,29 @@ def calculate_similarity(
     ride_a,
     ride_b
 ):
+    try:
+        source_a = ride_a.get(
+            "source",
+            (0, 0)
+        )
 
-    source_a = ride_a.get(
-        "source",
-        (0, 0)
-    )
+        source_b = ride_b.get(
+            "source",
+            (0, 0)
+        )
 
-    source_b = ride_b.get(
-        "source",
-        (0, 0)
-    )
+        destination_a = ride_a.get(
+            "destination",
+            (0, 0)
+        )
 
-    destination_a = ride_a.get(
-        "destination",
-        (0, 0)
-    )
+        destination_b = ride_b.get(
+            "destination",
+            (0, 0)
+        )
+    except Exception:
 
-    destination_b = ride_b.get(
-        "destination",
-        (0, 0)
-    )
-
+        return 0
     # =====================================================
     # SOURCE DISTANCE
     # =====================================================

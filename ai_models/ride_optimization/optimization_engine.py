@@ -6,9 +6,7 @@
 import uuid
 import time
 
-from ai_models.ride_optimization.match_rides import (
-    match_rides
-)
+
 
 from ai_models.ride_optimization.clustering import (
     create_ride_clusters
@@ -21,7 +19,12 @@ from ai_models.ride_optimization.recommendation import (
 from ai_models.ride_optimization.ride_manager import (
     ride_manager_instance
 )
-
+from ai_models.ride_optimization.state_manager import (
+    state
+)
+from ai_models.ride_optimization.match_rides import (
+    match_rides
+)
 # =========================================================
 # VEHICLE CONFIGURATION
 # =========================================================
@@ -69,7 +72,6 @@ class UrbanMobilityOptimizationEngine:
         # ENGINE STORAGE
         # =============================================
 
-        self.active_groups = {}
 
         self.optimization_history = []
 
@@ -178,11 +180,6 @@ class UrbanMobilityOptimizationEngine:
 
         groups = create_ride_clusters()
 
-        self.active_groups = {
-
-            group["cluster_id"]: group
-            for group in groups
-        }
 
         return groups
 
@@ -193,7 +190,7 @@ class UrbanMobilityOptimizationEngine:
     def generate_ai_recommendations(self):
 
         groups = list(
-            self.active_groups.values()
+            state.active_clusters.values()
         )
 
         if not groups:
@@ -473,7 +470,7 @@ class UrbanMobilityOptimizationEngine:
     def enable_dynamic_chaining(self):
 
         groups = list(
-            self.active_groups.values()
+            state.active_clusters.values()
         )
 
         optimized_groups = []
@@ -540,7 +537,7 @@ class UrbanMobilityOptimizationEngine:
         )
 
         total_groups = len(
-            self.active_groups
+            state.active_clusters
         )
 
         if total_rides == 0:
@@ -597,14 +594,7 @@ class UrbanMobilityOptimizationEngine:
 
     def run_dynamic_optimization(self):
 
-        # =============================================
-        # STEP 1 — MATCH RIDES
-        # =============================================
-
-        matches = (
-            self.find_best_matches()
-        )
-
+        
         # =============================================
         # STEP 2 — CREATE GROUPS
         # =============================================
@@ -657,11 +647,10 @@ class UrbanMobilityOptimizationEngine:
 
             "total_groups":
                 len(
-                    self.active_groups
+                    state.active_clusters
                 ),
 
-            "matches":
-                matches,
+            
 
             "optimized_groups":
                 optimized_groups,
@@ -757,7 +746,7 @@ class UrbanMobilityOptimizationEngine:
 
     def get_active_groups(self):
 
-        return self.active_groups
+        return state.active_clusters
 
     # =====================================================
     # GET RIDE HISTORY
@@ -782,7 +771,7 @@ class UrbanMobilityOptimizationEngine:
         )
 
         total_groups = len(
-            self.active_groups
+            state.active_clusters
         )
 
         occupancy = 0

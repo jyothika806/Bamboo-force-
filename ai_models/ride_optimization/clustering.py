@@ -8,7 +8,9 @@ from uuid import uuid4
 from ai_models.ride_optimization.match_rides import (
     match_rides
 )
-
+from ai_models.ride_optimization.state_manager import (
+    state
+)
 # =========================================================
 # VEHICLE CONFIGURATION
 # =========================================================
@@ -21,11 +23,7 @@ VEHICLE_CAPACITY = {
     "VAN": 7
 }
 
-# =========================================================
-# CLUSTER STORAGE
-# =========================================================
 
-ACTIVE_CLUSTERS = {}
 
 # =========================================================
 # OCCUPANCY SCORE
@@ -169,9 +167,11 @@ def create_cluster(group):
             "ACTIVE"
     }
 
-    ACTIVE_CLUSTERS[
-        cluster_id
-    ] = cluster
+    with state.lock:
+
+        state.active_clusters[
+            cluster_id
+        ] = cluster
 
     return cluster
 
@@ -181,7 +181,7 @@ def create_cluster(group):
 
 def create_ride_clusters():
 
-    ACTIVE_CLUSTERS.clear()
+    state.clear_clusters()
 
     groups = match_rides()
 
@@ -205,7 +205,7 @@ def create_ride_clusters():
 
 def get_active_clusters():
 
-    return ACTIVE_CLUSTERS
+    return state.active_clusters
 
 # =========================================================
 # CLUSTER METRICS
@@ -214,7 +214,7 @@ def get_active_clusters():
 def get_cluster_metrics():
 
     total_clusters = len(
-        ACTIVE_CLUSTERS
+        state.active_clusters
     )
 
     total_passengers = sum(
@@ -224,7 +224,7 @@ def get_cluster_metrics():
             0
         )
 
-        for cluster in ACTIVE_CLUSTERS.values()
+        for cluster in state.active_clusters.values()
     )
 
     avg_efficiency = 0
@@ -241,7 +241,7 @@ def get_cluster_metrics():
                 )
 
                 for cluster
-                in ACTIVE_CLUSTERS.values()
+                in state.active_clusters.values()
             )
 
             / total_clusters,

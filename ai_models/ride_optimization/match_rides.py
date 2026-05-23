@@ -8,7 +8,12 @@ from uuid import uuid4
 from ai_models.ride_optimization.route_similarity import (
     calculate_similarity
 )
-
+from ai_models.ride_optimization.state_manager import (
+    state
+)
+from ai_models.ride_optimization.maps_service import (
+    get_coordinates
+)
 # =========================================================
 # CONFIGURATION
 # =========================================================
@@ -25,13 +30,6 @@ VEHICLE_CAPACITY = {
     "VAN": 7
 }
 
-# =========================================================
-# ACTIVE STORAGE
-# =========================================================
-
-ACTIVE_RIDES = {}
-
-ACTIVE_GROUPS = {}
 
 # =========================================================
 # ADD RIDE
@@ -53,16 +51,21 @@ def add_ride(ride):
                 "Ride ID missing"
         }
 
-    ACTIVE_RIDES[
-        ride_id
-    ] = ride
+    with state.lock:
+
+        state.active_rides[
+            ride_id
+        ] = ride
 
     return {
 
-        "status": "RIDE_ADDED",
+        "status":
+            "RIDE_ADDED",
 
-        "ride_id": ride_id
+        "ride_id":
+            ride_id
     }
+    
 
 # =========================================================
 # REMOVE RIDE
@@ -70,20 +73,22 @@ def add_ride(ride):
 
 def remove_ride(ride_id):
 
-    if ride_id in ACTIVE_RIDES:
+    with state.lock:
 
-        del ACTIVE_RIDES[
-            ride_id
-        ]
+        if ride_id in state.active_rides:
 
-        return {
-
-            "status":
-                "RIDE_REMOVED",
-
-            "ride_id":
+            del state.active_rides[
                 ride_id
-        }
+            ]
+
+            return {
+
+                "status":
+                    "RIDE_REMOVED",
+
+                "ride_id":
+                    ride_id
+            }
 
     return {
 
@@ -93,14 +98,13 @@ def remove_ride(ride_id):
         "ride_id":
             ride_id
     }
-
 # =========================================================
 # GET ACTIVE RIDES
 # =========================================================
 
 def get_active_rides():
 
-    return ACTIVE_RIDES
+    return state.active_rides
 
 # =========================================================
 # GET ACTIVE GROUPS
@@ -108,7 +112,7 @@ def get_active_rides():
 
 def get_active_groups():
 
-    return ACTIVE_GROUPS
+    return state.active_groups
 
 # =========================================================
 # CLEAR ALL RIDES
@@ -116,10 +120,9 @@ def get_active_groups():
 
 def clear_rides():
 
-    ACTIVE_RIDES.clear()
+    state.clear_rides()
 
-    ACTIVE_GROUPS.clear()
-
+    state.clear_groups()
     return {
 
         "status":
@@ -278,9 +281,12 @@ def create_group(rides):
             "ACTIVE"
     }
 
-    ACTIVE_GROUPS[
-        group_id
-    ] = group
+    
+    with state.lock:
+
+        state.active_groups[
+            group_id
+        ] = group
 
     return group
 
@@ -290,14 +296,14 @@ def create_group(rides):
 
 def match_rides():
 
-    ACTIVE_GROUPS.clear()
+    state.clear_groups()
 
     matched_groups = []
 
     visited = set()
 
     ride_ids = list(
-        ACTIVE_RIDES.keys()
+        state.active_rides.keys()
     )
 
     total_rides = len(
@@ -316,7 +322,7 @@ def match_rides():
 
             continue
 
-        ride_a = ACTIVE_RIDES[
+        ride_a = state.active_rides[
             ride_id_a
         ]
 
@@ -343,7 +349,7 @@ def match_rides():
 
                 continue
 
-            ride_b = ACTIVE_RIDES[
+            ride_b = state.active_rides[
                 ride_id_b
             ]
 
@@ -369,11 +375,15 @@ def match_rides():
             # COMPATIBILITY CHECK
             # =============================================
 
-            if is_compatible(
+            if all(
 
-                ride_a,
+                is_compatible(
+                    existing_ride,
+                    ride_b
+                )
 
-                ride_b
+                for existing_ride
+                in current_group
             ):
 
                 current_group.append(
@@ -407,18 +417,9 @@ def match_rides():
 
 def update_ride_pool(new_ride):
 
-    add_ride(
-        new_ride
-    )
-
-    from ai_models.ride_optimization.match_rides import ACTIVE_RIDES
-
-    ACTIVE_RIDES.clear()
-
-    ACTIVE_RIDES.update(active_rides)
+    add_ride(new_ride)
 
     return match_rides()
-
 # =========================================================
 # SYSTEM METRICS
 # =========================================================
@@ -426,11 +427,11 @@ def update_ride_pool(new_ride):
 def get_matching_metrics():
 
     total_rides = len(
-        ACTIVE_RIDES
+        state.active_rides
     )
 
     total_groups = len(
-        ACTIVE_GROUPS
+        state.active_groups
     )
 
     total_saved_vehicles = sum(
@@ -440,7 +441,7 @@ def get_matching_metrics():
             0
         )
 
-        for group in ACTIVE_GROUPS.values()
+        for group in state.active_groups.values()
     )
 
     return {
