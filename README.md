@@ -1,6 +1,6 @@
 # 🚀 Bamboo Force AI
 
-**AI-powered ride safety prediction system that analyzes real-time factors like time, location risk, and driver rating to help users make safer travel decisions.**
+**AI-powered smart mobility and transportation safety platform that analyzes real-time factors like time, location risk, and driver rating to help users make safer travel decisions.**
 
 Bamboo Force AI integrates multiple deep learning modules into a unified transportation safety ecosystem combining:
 
