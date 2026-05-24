@@ -49,6 +49,11 @@
 
    <link
     rel="stylesheet"
+    href="../css/shared.css"
+>
+
+   <link
+    rel="stylesheet"
     href="../css/optimization.css"
 >
 </head>
@@ -97,21 +102,34 @@
 
         <div class="nav-links">
 
-            <a href="#features">
-                Features
+            <a href="../index.html">
+                <i class="fa-solid fa-house"></i>
+                Home
             </a>
 
-            <a href="#dashboard">
-                Dashboard
+            <a href="ride_optimization.html">
+                <i class="fa-solid fa-route"></i>
+                Ride Optimization
             </a>
 
-            <a href="#ride-section">
-                Smart Ride
+            <a href="user_verification.html">
+                <i class="fa-solid fa-shield-halved"></i>
+                Verification
+            </a>
+
+            <a href="ride_risk.html">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Risk Prediction
+            </a>
+
+            <a href="driver_portal.html">
+                <i class="fa-solid fa-user"></i>
+                Driver Portal
             </a>
 
         </div>
 
-        <button class="nav-btn">
+        <button class="nav-btn" onclick="window.location.href='../index.html'">
 
             <i class="fa-solid fa-wand-magic-sparkles"></i>
 
@@ -811,6 +829,66 @@
     </section>
 
     <!-- ========================================= -->
+    <!-- RIDE ACTIONS -->
+    <!-- ========================================= -->
+
+    <section class="mt-30">
+        <div class="glass-card">
+            <div class="section-title">
+                <h2>Ride Actions</h2>
+                <p>Manage your active rides with AI-powered controls</p>
+            </div>
+
+            <div class="input-group">
+                <label for="actionRideId">Ride ID</label>
+                <input
+                    type="text"
+                    id="actionRideId"
+                    placeholder="R100"
+                />
+            </div>
+
+            <div class="button-group-2 mt-20">
+                <button
+                    onclick="handleStartRide()"
+                    class="success-btn"
+                >
+                    <i class="fa-solid fa-play"></i>
+                    Start Ride
+                </button>
+
+                <button
+                    onclick="handleCompleteRide()"
+                    class="primary-btn"
+                >
+                    <i class="fa-solid fa-check"></i>
+                    Complete Ride
+                </button>
+
+                <button
+                    onclick="handleCancelRide()"
+                    class="danger-btn"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                    Cancel Ride
+                </button>
+
+                <button
+                    onclick="handleRideHistory()"
+                    class="action-btn"
+                >
+                    <i class="fa-solid fa-history"></i>
+                    View History
+                </button>
+            </div>
+
+            <div id="rideActionResult" class="result-container mt-20">
+                No action performed yet
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================= -->
     <!-- FOOTER -->
     <!-- ========================================= -->
 
@@ -834,9 +912,8 @@
     <!-- SCRIPT -->
     <!-- ========================================= -->
 
-    
+    <script src="../config.js"></script>
     <script src="../js/api.js"></script>
-
     <script src="../js/optimization.js"></script>
 </body>
 

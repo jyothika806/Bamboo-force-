@@ -104,39 +104,28 @@ class FaceVerificationService:
         driver_id: str,
         driver_name: str,
         id_image: UploadFile,
+        live_image: UploadFile,
     ) -> Dict[str, Any]:
-        """Full registration pipeline: liveness → ID save → KYC → embedding."""
-        liveness_result = verify_liveness()
-        if not liveness_result.get("verified"):
-            return {
-                "success": False,
-                "status_code": 401,
-                "detail": {
-                    "error": "Anti-Spoofing Security Block",
-                    "reason": liveness_result.get(
-                        "message", "Spoofing attempt detected"
-                    ),
-                    "confidence": liveness_result.get("confidence", 0.0),
-                },
-            }
-
+        """Full registration pipeline: ID save → live face save → embedding.
+        
+        Uses browser-uploaded media as primary source.
+        Server webcam (CameraManager) is kept only as fallback for local development.
+        """
+        # Save ID proof image
         id_path = str(
             self._settings.face_id_dir / f"{driver_id}_id.jpg"
         )
         with open(id_path, "wb") as buffer:
             shutil.copyfileobj(id_image.file, buffer)
 
-        live_face_path = self.run_kyc_scan(driver_id)
-        if not live_face_path:
-            return {
-                "success": False,
-                "status_code": 500,
-                "detail": (
-                    "KYC scanning camera sequence failed "
-                    "to isolate a profile frame."
-                ),
-            }
+        # Save live face image from browser camera
+        live_face_path = str(
+            self._settings.face_live_dir / f"{driver_id}_live.jpg"
+        )
+        with open(live_face_path, "wb") as buffer:
+            shutil.copyfileobj(live_image.file, buffer)
 
+        # Generate embedding using browser-uploaded face
         result = register_driver_service(
             face_path=live_face_path,
             id_path=id_path,
@@ -157,7 +146,6 @@ class FaceVerificationService:
             "driver_id": driver_id,
             "driver_name": driver_name,
             "biometric_distance": result.get("distance"),
-            "liveness_confidence": liveness_result.get("confidence"),
         }
 
     def verify_driver(

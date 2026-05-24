@@ -25,30 +25,10 @@ class RideManager:
 
     def __init__(self):
 
-        # =========================================
-        # ACTIVE SYSTEM STATE
-        # =========================================
-
-        state.active_rides = {}
-
-        state.active_clusters = {}
-
-        state.active_passengers = {}
-
-        state.completed_rides = {}
-
-        state.ride_history = []
-
-        # =========================================
-        # THREAD-SAFE LOCK
-        # =========================================
+        # Do not reset shared state — preserves rides across reload/re-import.
+        # State is initialized once in state_manager and optionally loaded from disk.
 
         self.lock = threading.RLock()
-
-        # =========================================
-        # CONFIGURATION
-        # =========================================
-
         state.ride_expiry_seconds = 3600
 
     # =====================================================

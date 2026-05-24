@@ -1,65 +1,83 @@
 // ======================================================
-// API BASE URL
+// BAMBOO FORCE AI — RIDE OPTIMIZATION UI
+// Uses api.js wrappers; no duplicate fetch logic.
 // ======================================================
-
-const API_BASE =
-    "http://127.0.0.1:8000/api/ride";
-
-// ======================================================
-// DEMO LOCATION DATABASE
-// ======================================================
-
 
 const LOCATION_COORDINATES = {
-
-    "madhapur": [17.4483, 78.3915],
-
+    madhapur: [17.4483, 78.3915],
     "hitech city": [17.4435, 78.3772],
-
-    "gachibowli": [17.4401, 78.3489],
-
-    "kukatpally": [17.4948, 78.3996],
-
-    "ameerpet": [17.4375, 78.4482],
-
+    gachibowli: [17.4401, 78.3489],
+    kukatpally: [17.4948, 78.3996],
+    ameerpet: [17.4375, 78.4482],
     "banjara hills": [17.4126, 78.4482],
-
-    "secunderabad": [17.4399, 78.4983]
+    secunderabad: [17.4399, 78.4983],
 };
+
 // ======================================================
-// CREATE RIDE
+// UI HELPERS — loading / toast (uses existing CSS)
 // ======================================================
 
-async function createRide(data) {
+function showRideToast(message, type = "success") {
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
 
-    try {
+    let icon = "fa-circle-check";
+    if (type === "error") {
+        icon = "fa-circle-xmark";
+    } else if (type === "info") {
+        icon = "fa-circle-info";
+    }
 
-        const response = await fetch(
+    toast.innerHTML =
+        '<motionless-div class="toast-content">' +
+        '<i class="fa-solid ' + icon + '"></i>' +
+        '<span>' + message + '</span>' +
+        '</motionless-div>'.replace(/motionless-div/g, 'div');
 
-            `${API_BASE}/create`,
+    document.body.appendChild(toast);
 
-            {
+    requestAnimationFrame(() => {
+        toast.classList.add("show");
+    });
 
-                method: "POST",
+    setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 400);
+    }, 3200);
+}
 
-                headers: {
+function setSectionLoading(containerId, message) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+        return;
+    }
 
-                    "Content-Type":
-                        "application/json"
-                },
+    const cardClass =
+        containerId === "recommendationContainer"
+            ? "recommendation-card"
+            : "dashboard-card";
 
-                body: JSON.stringify(data)
-            }
-        );
+    container.innerHTML = `
+        <div class="${cardClass}">
+            <h3>${message}</h3>
+        </div>
+    `;
+}
 
-        return await response.json();
+function setSubmitLoading(isLoading) {
+    const btn = document.querySelector("#rideForm .submit-btn");
+    if (!btn) {
+        return;
+    }
 
-    } catch (error) {
+    btn.disabled = isLoading;
 
-        console.error(
-            "Create Ride Error:",
-            error
-        );
+    if (isLoading) {
+        btn.dataset.originalText = btn.innerHTML;
+        btn.innerHTML =
+            '<i class="fa-solid fa-spinner fa-spin"></i> Optimizing...';
+    } else if (btn.dataset.originalText) {
+        btn.innerHTML = btn.dataset.originalText;
     }
 }
 
@@ -68,30 +86,35 @@ async function createRide(data) {
 // ======================================================
 
 async function loadActiveRides() {
+    const countEl = document.getElementById("activeRideCount");
+    if (countEl) {
+        countEl.innerText = "...";
+    }
 
     try {
+        const result = await getActiveRides();
 
-        const response = await fetch(
-            `${API_BASE}/active`
-        );
-
-        const result =
-            await response.json();
-
-        if (result.success) {
-
-            document.getElementById(
-                "activeRideCount"
-            ).innerText =
-
-                Object.keys(
-                    result.data
-                ).length;
+        if (!result || !result.success) {
+            if (countEl) {
+                countEl.innerText = "—";
+            }
+            showRideToast(
+                result?.error || "Failed to load active rides",
+                "error"
+            );
+            return;
         }
 
+        const rides = result.data || {};
+        if (countEl) {
+            countEl.innerText = String(Object.keys(rides).length);
+        }
     } catch (error) {
-
         console.error(error);
+        if (countEl) {
+            countEl.innerText = "—";
+        }
+        showRideToast("Failed to load active rides", "error");
     }
 }
 
@@ -100,23 +123,20 @@ async function loadActiveRides() {
 // ======================================================
 
 async function loadGroups() {
+    setSectionLoading("groupsContainer", "Loading groups...");
 
     try {
+        const result = await getActiveGroups();
 
-        const response = await fetch(
-            `${API_BASE}/groups`
-        );
+        if (!result || !result.success) {
+            renderGroups(null, result?.error);
+            return;
+        }
 
-        const result =
-            await response.json();
-
-        renderGroups(
-            result.data
-        );
-
+        renderGroups(result.data);
     } catch (error) {
-
         console.error(error);
+        renderGroups(null, error.message);
     }
 }
 
@@ -125,334 +145,357 @@ async function loadGroups() {
 // ======================================================
 
 async function loadRecommendations() {
+    setSectionLoading(
+        "recommendationContainer",
+        "Loading recommendations..."
+    );
 
     try {
+        const result = await getRecommendations();
 
-        const response = await fetch(
-            `${API_BASE}/recommendations`
-        );
+        if (!result || !result.success) {
+            renderRecommendations(null, result?.error);
+            return;
+        }
 
-        const result =
-            await response.json();
-
-        renderRecommendations(
-            result.data
-        );
-
+        renderRecommendations(result.data);
     } catch (error) {
-
         console.error(error);
+        renderRecommendations(null, error.message);
     }
+}
+
+// ======================================================
+// REFRESH DASHBOARD
+// ======================================================
+
+async function refreshDashboard() {
+    await Promise.all([
+        loadActiveRides(),
+        loadGroups(),
+        loadRecommendations(),
+    ]);
 }
 
 // ======================================================
 // FORM SUBMIT
 // ======================================================
 
-document.getElementById(
-    "rideForm"
-).addEventListener(
-
+document.getElementById("rideForm").addEventListener(
     "submit",
-
-    async function(event) {
-
+    async function (event) {
         event.preventDefault();
+
         const vehicleType =
-            document.getElementById(
-                "vehicle_type"
-            ).value;
+            document.getElementById("vehicle_type").value;
 
         let passengerCount = 1;
-
         if (vehicleType === "AUTO") {
-
             passengerCount = 3;
-        }
-
-        else if (vehicleType === "CAB") {
-
+        } else if (vehicleType === "CAB") {
             passengerCount = 4;
-        }
-
-        else if (vehicleType === "VAN") {
-
+        } else if (vehicleType === "VAN") {
             passengerCount = 6;
         }
-        const pickupLocation =
-            document.getElementById(
-                "pickup_location"
-            ).value.toLowerCase();
 
-        const destinationLocation =
-            document.getElementById(
-                "destination_location"
-            ).value.toLowerCase();
+        const pickupLocation = document
+            .getElementById("pickup_location")
+            .value.toLowerCase()
+            .trim();
 
-        const source =
-            LOCATION_COORDINATES[
-                pickupLocation.trim()
-            ];
+        const destinationLocation = document
+            .getElementById("destination_location")
+            .value.toLowerCase()
+            .trim();
 
-        const destination =
-            LOCATION_COORDINATES[
-                destinationLocation.trim()
-            ];
+        const source = LOCATION_COORDINATES[pickupLocation];
+        const destination = LOCATION_COORDINATES[destinationLocation];
 
         if (!source || !destination) {
-
-            alert(
-                "Demo location not supported"
-            );
-
+            showRideToast("Demo location not supported", "error");
             return;
         }
 
         const rideData = {
-
-            ride_id:
-                document.getElementById(
-                    "ride_id"
-                ).value,
-
+            ride_id: document.getElementById("ride_id").value,
             source: source,
-
             destination: destination,
-
-            start_time:
-                Date.now(),
-
-            share_allowed:
-                document.getElementById(
-                    "share_allowed"
-                ).checked,
-
-            passenger_count:
-                passengerCount,
+            start_time: String(Date.now()),
+            share_allowed: document.getElementById("share_allowed").checked,
+            passenger_count: passengerCount,
         };
 
-        const result =
-            await createRide(
-                rideData
-            );
-        console.log(
-            "CREATE RESPONSE:",
-            result
-        );
-        alert(
-            JSON.stringify(result)
-        );
-        console.log(result);
-        if (result.success) {
-            alert(
-                "AI Ride Optimization Complete"
-            );
-            document
-                .getElementById("rideForm")
-                .reset();
-            loadActiveRides();
+        setSubmitLoading(true);
 
-            loadGroups();
+        try {
+            const result = await createRide(rideData);
+            console.log("CREATE RESPONSE:", result);
 
-            loadRecommendations();
+            if (result && result.success) {
+                showRideToast("AI Ride Optimization Complete", "success");
+                document.getElementById("rideForm").reset();
+                await refreshDashboard();
+            } else {
+                const msg =
+                    result?.error ||
+                    result?.detail ||
+                    result?.message ||
+                    "Backend error while creating ride";
+                showRideToast(
+                    typeof msg === "string" ? msg : JSON.stringify(msg),
+                    "error"
+                );
+            }
+        } catch (error) {
+            console.error(error);
+            showRideToast("Network error while creating ride", "error");
+        } finally {
+            setSubmitLoading(false);
         }
-        else {
-
-            alert(
-                "Backend Error"
-            );
-
-            console.log(result);
-        }
+    }
+);
 
 // ======================================================
 // RENDER GROUPS
 // ======================================================
 
-function renderGroups(groups) {
-
-    const container =
-
-        document.getElementById(
-            "groupsContainer"
-        );
-
-    container.innerHTML = "";
-
-    if (
-
-        !groups ||
-
-        Object.keys(groups).length === 0
-    ) {
-
-        container.innerHTML = `
-
-        <div class="dashboard-card">
-
-            <h3>
-                No Groups Yet
-            </h3>
-
-        </div>
-        `;
-
+function renderGroups(groups, errorMessage) {
+    const container = document.getElementById("groupsContainer");
+    if (!container) {
         return;
     }
 
-    Object.entries(groups).forEach(
+    container.innerHTML = "";
 
-        ([groupId, group]) => {
+    if (errorMessage) {
+        container.innerHTML = `
+            <div class="dashboard-card">
+                <h3>Could not load groups</h3>
+                <p>${errorMessage}</p>
+            </div>
+        `;
+        return;
+    }
 
-            const card =
-                document.createElement(
-                    "div"
-                );
+    if (!groups || Object.keys(groups).length === 0) {
+        container.innerHTML = `
+            <div class="dashboard-card">
+                <h3>No Groups Yet</h3>
+                <p>Create a shared ride to see AI groups.</p>
+            </div>
+        `;
+        return;
+    }
 
-            card.className =
-                "dashboard-card";
+    Object.entries(groups).forEach(([groupId, group]) => {
+        const card = document.createElement("div");
+        card.className = "dashboard-card";
 
-            card.innerHTML = `
+        const vehicle =
+            group.recommended_vehicle || group.vehicle || "—";
+        const passengers =
+            group.passenger_count ?? group.passengers ?? "—";
+        const efficiency =
+            group.cluster_efficiency ?? group.efficiency ?? "—";
+        const chainReady =
+            group.dynamic_chain_ready === true ? "Yes" : "No";
 
-                <h3>
-                    ${groupId}
-                </h3>
+        card.innerHTML = `
+            <h3>${groupId}</h3>
+            <p>Vehicle: ${vehicle}</p>
+            <p>Passengers: ${passengers}</p>
+            <p>Efficiency: ${efficiency}</p>
+            <p>Dynamic Chain: ${chainReady}</p>
+        `;
 
-                <p>
-                    Vehicle:
-                    ${group.recommended_vehicle}
-                </p>
-
-                <p>
-                    Passengers:
-                    ${group.passenger_count}
-                </p>
-
-                <p>
-                    Efficiency:
-                    ${group.cluster_efficiency}
-                </p>
-
-                <p>
-                    Dynamic Chain:
-                    ${group.dynamic_chain_ready}
-                </p>
-            `;
-
-            container.appendChild(card);
-        }
-    );
+        container.appendChild(card);
+    });
 }
 
 // ======================================================
 // RENDER RECOMMENDATIONS
 // ======================================================
 
-function renderRecommendations(data) {
-
-    const container =
-        document.getElementById(
-            "recommendationContainer"
-        );
-
-    container.innerHTML = "";
-
-    if (
-
-        !data ||
-
-        !data.passenger_recommendations
-    ) {
-
-        container.innerHTML = `
-
-        <div class="recommendation-card">
-
-            <h3>
-                No Recommendations Yet
-            </h3>
-
-        </div>
-        `;
-
+function renderRecommendations(data, errorMessage) {
+    const container = document.getElementById("recommendationContainer");
+    if (!container) {
         return;
     }
 
-    data.passenger_recommendations.forEach(
+    container.innerHTML = "";
 
-        item => {
-
-            container.innerHTML += `
-
+    if (errorMessage) {
+        container.innerHTML = `
             <div class="recommendation-card">
+                <h3>Could not load recommendations</h3>
+                <p>${errorMessage}</p>
+            </div>
+        `;
+        return;
+    }
 
-                <h3>
+    if (!data || !data.passenger_recommendations) {
+        container.innerHTML = `
+            <div class="recommendation-card">
+                <h3>No Recommendations Yet</h3>
+                <p>Create rides to receive AI suggestions.</p>
+            </div>
+        `;
+        return;
+    }
 
-                    AI Ride Suggestion
-
-                </h3>
-
+    data.passenger_recommendations.forEach((item) => {
+        container.innerHTML += `
+            <div class="recommendation-card">
+                <h3>AI Ride Suggestion</h3>
                 <p>
-
                     Recommended Vehicle:
-                    <strong>
-                        ${item.recommended_vehicle}
-                    </strong>
-
+                    <strong>${item.recommended_vehicle || "—"}</strong>
                 </p>
-
                 <p>
-
                     Action:
-                    <strong>
-                        ${item.vehicle_action}
-                    </strong>
-
+                    <strong>${item.vehicle_action || "—"}</strong>
                 </p>
-
+                <p>Reason: ${item.reason || "—"}</p>
                 <p>
-
-                    Reason:
-                    ${item.reason}
-
-                </p>
-
-                <p>
-
                     Traffic Reduction:
                     ${(
-                        item.traffic_reduction_score
-                        * 100
+                        (item.traffic_reduction_score || 0) * 100
                     ).toFixed(0)}%
-
                 </p>
-
                 <p>
-
                     Cost Savings:
-                    ₹${item.estimated_cost_savings}
-
+                    ₹${item.estimated_cost_savings ?? 0}
                 </p>
-
                 <p>
-
                     Ride Chain Potential:
-                    ${item.ride_chain_potential}
-
+                    ${item.ride_chain_potential ?? "—"}
                 </p>
-
             </div>
-            `;
+        `;
+    });
+}
+
+// ======================================================
+// RIDE ACTION HANDLERS
+// ======================================================
+
+async function handleStartRide() {
+    const rideId = document.getElementById("actionRideId").value;
+    const resultBox = document.getElementById("rideActionResult");
+    
+    if (!rideId) {
+        resultBox.innerHTML = `<p class="error">Please enter a Ride ID</p>`;
+        return;
+    }
+    
+    resultBox.innerHTML = `<p>Starting ride...</p>`;
+    
+    try {
+        const result = await startRide(rideId);
+        console.log("Start Ride Result:", result);
+        
+        if (result && result.success) {
+            resultBox.innerHTML = `<p class="success">Ride ${rideId} started successfully</p>`;
+            await refreshDashboard();
+        } else {
+            resultBox.innerHTML = `<p class="error">Failed to start ride: ${result?.error || "Unknown error"}</p>`;
         }
-    );
+    } catch (error) {
+        console.error("Start ride error:", error);
+        resultBox.innerHTML = `<p class="error">Network error: ${error.message}</p>`;
+    }
+}
+
+async function handleCompleteRide() {
+    const rideId = document.getElementById("actionRideId").value;
+    const resultBox = document.getElementById("rideActionResult");
+    
+    if (!rideId) {
+        resultBox.innerHTML = `<p class="error">Please enter a Ride ID</p>`;
+        return;
+    }
+    
+    resultBox.innerHTML = `<p>Completing ride...</p>`;
+    
+    try {
+        const result = await completeRide(rideId);
+        console.log("Complete Ride Result:", result);
+        
+        if (result && result.success) {
+            resultBox.innerHTML = `<p class="success">Ride ${rideId} completed successfully</p>`;
+            await refreshDashboard();
+        } else {
+            resultBox.innerHTML = `<p class="error">Failed to complete ride: ${result?.error || "Unknown error"}</p>`;
+        }
+    } catch (error) {
+        console.error("Complete ride error:", error);
+        resultBox.innerHTML = `<p class="error">Network error: ${error.message}</p>`;
+    }
+}
+
+async function handleCancelRide() {
+    const rideId = document.getElementById("actionRideId").value;
+    const resultBox = document.getElementById("rideActionResult");
+    
+    if (!rideId) {
+        resultBox.innerHTML = `<p class="error">Please enter a Ride ID</p>`;
+        return;
+    }
+    
+    resultBox.innerHTML = `<p>Cancelling ride...</p>`;
+    
+    try {
+        const result = await cancelRide(rideId);
+        console.log("Cancel Ride Result:", result);
+        
+        if (result && result.success) {
+            resultBox.innerHTML = `<p class="success">Ride ${rideId} cancelled successfully</p>`;
+            await refreshDashboard();
+        } else {
+            resultBox.innerHTML = `<p class="error">Failed to cancel ride: ${result?.error || "Unknown error"}</p>`;
+        }
+    } catch (error) {
+        console.error("Cancel ride error:", error);
+        resultBox.innerHTML = `<p class="error">Network error: ${error.message}</p>`;
+    }
+}
+
+async function handleRideHistory() {
+    const resultBox = document.getElementById("rideActionResult");
+    
+    resultBox.innerHTML = `<p>Loading ride history...</p>`;
+    
+    try {
+        const result = await getRideHistory();
+        console.log("Ride History Result:", result);
+        
+        if (result && result.success) {
+            const history = result.data || result;
+            const historyHtml = Object.entries(history).map(([rideId, ride]) => {
+                const status = ride.status || "Unknown";
+                const statusClass = status.toLowerCase();
+                return `
+                    <div class="ride-item">
+                        <strong>${rideId}</strong>
+                        <span class="status-badge ${statusClass}">${status}</span>
+                    </div>
+                `;
+            }).join("");
+            resultBox.innerHTML = `<div class="history-list"><h3>Ride History</h3>${historyHtml}</div>`;
+        } else {
+            resultBox.innerHTML = `<p class="error">Failed to load history: ${result?.error || "Unknown error"}</p>`;
+        }
+    } catch (error) {
+        console.error("Ride history error:", error);
+        resultBox.innerHTML = `<p class="error">Network error: ${error.message}</p>`;
+    }
 }
 
 // ======================================================
 // INITIAL LOAD
 // ======================================================
 
-loadActiveRides();
-
-loadGroups();
-
-loadRecommendations();
+document.addEventListener("DOMContentLoaded", () => {
+    refreshDashboard();
+});

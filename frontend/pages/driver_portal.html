@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Bamboo Force | Driver Portal
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="../css/shared.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../css/face_verification.css"
+    >
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- ============================================= -->
+    <!-- NAVIGATION -->
+    <!-- ============================================= -->
+
+    <nav class="page-nav">
+        <a href="../index.html" class="nav-link">
+            <i class="fa-solid fa-house"></i>
+            Home
+        </a>
+        <a href="ride_optimization.html" class="nav-link">
+            <i class="fa-solid fa-route"></i>
+            Ride Optimization
+        </a>
+        <a href="user_verification.html" class="nav-link">
+            <i class="fa-solid fa-shield-halved"></i>
+            Verification
+        </a>
+        <a href="ride_risk.html" class="nav-link">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Risk Prediction
+        </a>
+        <a href="driver_portal.html" class="nav-link active">
+            <i class="fa-solid fa-user"></i>
+            Driver Portal
+        </a>
+    </nav>
+
+    <!-- ============================================= -->
+    <!-- HEALTH INDICATOR -->
+    <!-- ============================================= -->
+
+    <div
+        id="backendHealthIndicator"
+        class="health-indicator"
+    >
+        ● Checking backend status...
+    </div>
+
+    <!-- ============================================= -->
+    <!-- PAGE TITLE -->
+    <!-- ============================================= -->
+
+    <div class="section-title">
+        <h1>Driver Portal</h1>
+        <p>Manage your driver profile and verification status</p>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- DASHBOARD GRID -->
+    <!-- ============================================= -->
+
+    <div class="dashboard-grid-2">
+        <!-- DRIVER STATUS -->
+        <div class="glass-card">
+            <div class="section-title">
+                <h3>Driver Status</h3>
+            </div>
+            <div id="driverStatus">
+                <p>Loading driver status...</p>
+            </div>
+        </div>
+
+        <!-- VERIFICATION STATUS -->
+        <div class="glass-card">
+            <div class="section-title">
+                <h3>Verification Status</h3>
+            </div>
+            <div id="verificationStatus">
+                <p>Loading verification status...</p>
+            </div>
+        </div>
+
+        <!-- ACTIVE RIDE STATE -->
+        <div class="glass-card">
+            <div class="section-title">
+                <h3>Active Ride State</h3>
+            </div>
+            <div id="activeRideState">
+                <p>Loading ride state...</p>
+            </div>
+        </div>
+
+        <!-- QUICK RIDE ACTIONS -->
+        <div class="glass-card">
+            <div class="section-title">
+                <h3>Quick Ride Actions</h3>
+            </div>
+            <div class="button-group">
+                <button class="action-btn" onclick="window.location.href='ride_optimization.html'">
+                    <i class="fa-solid fa-plus"></i>
+                    Create New Ride
+                </button>
+                <button class="primary-btn" onclick="window.location.href='ride_optimization.html'">
+                    <i class="fa-solid fa-list"></i>
+                    View Active Rides
+                </button>
+                <button class="action-btn" onclick="window.location.href='ride_risk.html'">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Risk Prediction
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- QUICK NAVIGATION -->
+    <!-- ============================================= -->
+
+    <div class="glass-card mt-30">
+        <div class="section-title">
+            <h3>Quick Navigation</h3>
+        </div>
+        <div class="button-group-2">
+            <button class="action-btn" onclick="window.location.href='ride_optimization.html'">
+                <i class="fa-solid fa-route"></i>
+                Ride Optimization
+            </button>
+            <button class="action-btn" onclick="window.location.href='user_verification.html'">
+                <i class="fa-solid fa-shield-halved"></i>
+                User Verification
+            </button>
+            <button class="action-btn" onclick="window.location.href='ride_risk.html'">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                Risk Prediction
+            </button>
+            <button class="primary-btn" onclick="window.location.href='../index.html'">
+                <i class="fa-solid fa-house"></i>
+                Home Dashboard
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script src="../config.js"></script>
+<script src="../js/api.js"></script>
+
+<script>
+    async function loadDriverStatus() {
+        const statusBox = document.getElementById("driverStatus");
+        
+        try {
+            statusBox.innerHTML = "<p>Checking status...</p>";
+            
+            const health = await getBackendHealth();
+            
+            if (health && (health.status === "ok" || health.success)) {
+                statusBox.innerHTML = `
+                    <h3 class="success">System Online</h3>
+                    <p>Backend services are operational.</p>
+                `;
+            } else {
+                statusBox.innerHTML = `
+                    <h3 class="error">System Offline</h3>
+                    <p>Backend services are currently unavailable.</p>
+                `;
+            }
+        } catch (error) {
+            console.error("Driver status error:", error);
+            statusBox.innerHTML = `
+                <h3 class="error">Error</h3>
+                <p>Failed to load driver status.</p>
+            `;
+        }
+    }
+
+    async function loadVerificationStatus() {
+        const statusBox = document.getElementById("verificationStatus");
+        
+        try {
+            statusBox.innerHTML = "<p>Checking verification status...</p>";
+            
+            // For now, show a simple status since we don't have a specific verification status API
+            // This would typically call a verification status endpoint
+            statusBox.innerHTML = `
+                <div class="verification-badge">
+                    <span class="status-badge pending">Verification Pending</span>
+                </div>
+                <p>Complete KYC verification to unlock full driver features.</p>
+                <button class="action-btn" onclick="window.location.href='user_verification.html'">
+                    Complete KYC Verification
+                </button>
+            `;
+        } catch (error) {
+            console.error("Verification status error:", error);
+            statusBox.innerHTML = `
+                <h3 class="error">Error</h3>
+                <p>Failed to load verification status.</p>
+            `;
+        }
+    }
+
+    async function loadActiveRideState() {
+        const statusBox = document.getElementById("activeRideState");
+        
+        try {
+            statusBox.innerHTML = "<p>Loading ride state...</p>";
+            
+            const rides = await getActiveRides();
+            
+            if (rides && rides.success) {
+                const activeRides = rides.data || rides;
+                const rideCount = Object.keys(activeRides).length;
+                
+                if (rideCount > 0) {
+                    const rideList = Object.entries(activeRides).map(([rideId, ride]) => {
+                        const status = ride.status || "Active";
+                        const statusClass = status.toLowerCase();
+                        return `
+                            <div class="ride-item">
+                                <strong>${rideId}</strong>
+                                <span class="status-badge ${statusClass}">${status}</span>
+                            </div>
+                        `;
+                    }).join("");
+                    statusBox.innerHTML = `
+                        <h3 class="success">${rideCount} Active Ride(s)</h3>
+                        <div class="ride-list">${rideList}</div>
+                    `;
+                } else {
+                    statusBox.innerHTML = `
+                        <div class="no-rides">
+                            <h3>No Active Rides</h3>
+                            <p>Create a new ride to get started.</p>
+                        </div>
+                    `;
+                }
+            } else {
+                statusBox.innerHTML = `
+                    <h3 class="error">Failed to load rides</h3>
+                    <p>${rides?.error || "Unknown error"}</p>
+                `;
+            }
+        } catch (error) {
+            console.error("Active ride state error:", error);
+            statusBox.innerHTML = `
+                <h3 class="error">Error</h3>
+                <p>Failed to load ride state.</p>
+            `;
+        }
+    }
+
+    async function updateHealthIndicator() {
+        try {
+            const health = await getBackendHealth();
+            const indicator = document.getElementById("backendHealthIndicator");
+            
+            if (health && (health.status === "ok" || health.success)) {
+                indicator.className = "health-indicator healthy";
+                indicator.innerHTML = "● Backend Online";
+            } else {
+                indicator.className = "health-indicator unhealthy";
+                indicator.innerHTML = "● Backend Offline";
+            }
+        } catch (error) {
+            const indicator = document.getElementById("backendHealthIndicator");
+            indicator.className = "health-indicator unhealthy";
+            indicator.innerHTML = "● Backend Offline";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadDriverStatus();
+        loadVerificationStatus();
+        loadActiveRideState();
+        updateHealthIndicator();
+    });
+</script>
+
+</body>
+
+</html>

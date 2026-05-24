@@ -23,6 +23,17 @@
     border-radius: 10px;
 
     border: none;
+
+    background: rgba(255, 255, 255, 0.1);
+
+    color: white;
+
+    font-size: 14px;
+}
+
+.risk-container input::placeholder {
+
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .risk-container button {
@@ -33,18 +44,314 @@
 
     border-radius: 10px;
 
-    background: cyan;
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
 
     cursor: pointer;
 
     font-weight: bold;
+
+    color: white;
+
+    transition: all 0.3s ease;
+
+    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
 }
 
-#riskResult {
+.risk-container button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+}
+
+.risk-container button:disabled {
+
+    opacity: 0.6;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+#riskResult,
+#driverRiskResult,
+#routeRiskResult,
+#liveRiskResult,
+#riskHistoryResult {
 
     padding: 20px;
 
     border-radius: 10px;
 
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
+
+    backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    color: white;
+}
+
+.risk-section h2 {
+
+    color: white;
+
+    margin-bottom: 20px;
+}
+
+.history-item {
+
+    padding: 10px;
+
+    margin: 5px 0;
+
+    background: rgba(0, 212, 255, 0.1);
+
+    border-radius: 5px;
+
+    border-left: 3px solid #00d4ff;
+}
+
+.history-list {
+
+    max-height: 200px;
+
+    overflow-y: auto;
+}
+
+.risk-badge {
+
+    display: inline-block;
+
+    padding: 5px 15px;
+
+    border-radius: 20px;
+
+    font-size: 12px;
+
+    font-weight: bold;
+
+    margin: 5px 0;
+}
+
+.risk-badge.low {
+
+    background: linear-gradient(135deg, #00ff88, #00cc66);
+
+    color: white;
+}
+
+.risk-badge.medium {
+
+    background: linear-gradient(135deg, #ffaa00, #ff8800);
+
+    color: white;
+}
+
+.risk-badge.high {
+
+    background: linear-gradient(135deg, #ff4444, #cc0000);
+
+    color: white;
+}
+
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+.page-nav {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    padding: 15px;
+
+    background: rgba(255, 255, 255, 0.05);
+
+    border-radius: 12px;
+
+    margin-bottom: 30px;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-link {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 10px 16px;
+
+    border-radius: 8px;
+
+    text-decoration: none;
+
+    color: rgba(255, 255, 255, 0.7);
+
+    font-size: 14px;
+
+    font-weight: 500;
+
+    transition: all 0.3s ease;
+
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link:hover {
+
+    background: rgba(0, 212, 255, 0.2);
+
+    color: #00d4ff;
+
+    transform: translateY(-1px);
+}
+
+.nav-link.active {
+
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
+
+    color: white;
+
+    font-weight: 600;
+}
+
+.nav-link i {
+
+    font-size: 16px;
+}
+
+/* =========================================================
+   TITLE STYLES
+========================================================= */
+
+.title {
+
+    color: white;
+
+    font-size: 42px;
+
+    font-weight: bold;
+
+    margin-bottom: 10px;
+}
+
+.container {
+
+    width: 80%;
+
+    max-width: 1000px;
+
+    margin: auto;
+
+    padding: 50px 20px;
+}
+
+/* =========================================================
+   TOAST NOTIFICATIONS
+========================================================= */
+
+.toast-container {
+
+    position: fixed;
+
+    top: 20px;
+
+    right: 20px;
+
+    z-index: 1000;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.toast {
+
+    padding: 15px 20px;
+
+    border-radius: 10px;
+
+    background: rgba(30, 41, 59, 0.95);
+
+    backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    color: white;
+
+    font-size: 14px;
+
+    font-weight: 500;
+
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+
+    animation: slideIn 0.3s ease;
+
+    max-width: 300px;
+}
+
+.toast.success {
+
+    border-left: 4px solid #00ff88;
+}
+
+.toast.error {
+
+    border-left: 4px solid #ff4444;
+}
+
+.toast.warning {
+
+    border-left: 4px solid #ffaa00;
+}
+
+.toast.info {
+
+    border-left: 4px solid #00d4ff;
+}
+
+@keyframes slideIn {
+
+    from {
+
+        transform: translateX(100%);
+
+        opacity: 0;
+
+    }
+
+    to {
+
+        transform: translateX(0);
+
+        opacity: 1;
+
+    }
+}
+
+@keyframes slideOut {
+
+    from {
+
+        transform: translateX(0);
+
+        opacity: 1;
+
+    }
+
+    to {
+
+        transform: translateX(100%);
+
+        opacity: 0;
+
+    }
 }

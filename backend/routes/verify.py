@@ -24,11 +24,13 @@ async def register_driver(
     driver_id: str = Form(...),
     driver_name: str = Form(...),
     id_image: UploadFile = File(...),
+    live_image: UploadFile = File(...),
 ):
     result = await face_verification_service.register_driver(
         driver_id=driver_id,
         driver_name=driver_name,
         id_image=id_image,
+        live_image=live_image,
     )
     _raise_from_service(result)
     return result
@@ -39,9 +41,10 @@ async def register_driver_alias(
     driver_id: str = Form(...),
     driver_name: str = Form(...),
     id_image: UploadFile = File(...),
+    live_image: UploadFile = File(...),
 ):
     """Alias for frontend compatibility."""
-    return await register_driver(driver_id, driver_name, id_image)
+    return await register_driver(driver_id, driver_name, id_image, live_image)
 
 
 @router.post("/verify")

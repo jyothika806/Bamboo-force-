@@ -317,7 +317,141 @@ python -m ai_models.ride_risk_prediction.detect_anomaly
 
 ---
 
-# 🔐 Security & Safety Features
+# � FastAPI Backend Deployment
+
+## Start Backend Server
+
+```bash
+# Development mode
+uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+
+# Production mode
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4
+```
+
+## Environment Configuration
+
+Create a `.env` file in the project root:
+
+```env
+# Backend Configuration
+APP_NAME=Bamboo Force AI
+APP_VERSION=1.0.0
+DEBUG=false
+ENVIRONMENT=production
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8000
+
+# CORS Configuration
+CORS_ORIGINS=["*"]
+
+# AI Model Configuration
+DEVICE=cpu
+VIDEO_LIVENESS_MODEL_PATH=video_liveness_model.pth
+RISK_AUTOENCODER_PATH=ai_models/ride_risk_prediction/checkpoints/autoencoder.pth
+RISK_SCALER_PATH=ai_models/ride_risk_prediction/checkpoints/scaler.save
+RISK_ANOMALY_THRESHOLD=0.000537
+
+# Camera Configuration
+CAMERA_INDEX=0
+CAMERA_MAX_KYC_FRAMES=110
+
+# Liveness Detection Settings
+LIVENESS_THRESHOLD=0.3
+ALLOW_LOW_CONFIDENCE_LIVENESS=false
+```
+
+## Frontend Configuration
+
+Update `frontend/config.js` for production:
+
+```javascript
+window.APP_CONFIG = {
+    baseUrl: "https://your-domain.com",  // Change to production URL
+    requestTimeoutMs: 30000,
+};
+```
+
+---
+
+# 🌐 Production Deployment
+
+## Docker Deployment (Recommended)
+
+### Dockerfile
+
+```dockerfile
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### Build and Run
+
+```bash
+# Build image
+docker build -t bamboo-force-ai .
+
+# Run container
+docker run -p 8000:8000 bamboo-force-ai
+```
+
+## Cloud Deployment
+
+### Requirements
+
+- Python 3.10+
+- 4GB RAM minimum
+- GPU optional (for faster inference)
+- Port 8000 open
+
+### Deployment Steps
+
+1. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Configure Environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your settings
+   ```
+
+3. **Start Backend**
+   ```bash
+   uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 4
+   ```
+
+4. **Serve Frontend**
+   - Use nginx, Apache, or any static file server
+   - Point to the `frontend/` directory
+   - Update `frontend/config.js` with production URL
+
+### Health Checks
+
+```bash
+# Backend health
+curl http://localhost:8000/health
+
+# API health
+curl http://localhost:8000/api/ride/health
+```
+
+---
+
+# �🔐 Security & Safety Features
 
 * AI-based anti-spoof detection
 * Driver identity verification

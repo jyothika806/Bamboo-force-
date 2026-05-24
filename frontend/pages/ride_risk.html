@@ -10,49 +10,245 @@
 
     </title>
 
+    <link
+        rel="stylesheet"
+        href="../css/shared.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../css/risk.css"
+    >
+
 </head>
 
 <body>
 
-    <h1>
+<div class="container">
 
-        Ride Risk Prediction Module
+    <!-- ============================================= -->
+    <!-- NAVIGATION -->
+    <!-- ============================================= -->
 
-    </h1>
-    <!-- ===================================================== -->
-<!-- RISK PREDICTION -->
-<!-- ===================================================== -->
+    <nav class="page-nav">
+        <a href="../index.html" class="nav-link">
+            <i class="fa-solid fa-house"></i>
+            Home
+        </a>
+        <a href="ride_optimization.html" class="nav-link">
+            <i class="fa-solid fa-route"></i>
+            Ride Optimization
+        </a>
+        <a href="user_verification.html" class="nav-link">
+            <i class="fa-solid fa-shield-halved"></i>
+            Verification
+        </a>
+        <a href="ride_risk.html" class="nav-link active">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Risk Prediction
+        </a>
+        <a href="driver_portal.html" class="nav-link">
+            <i class="fa-solid fa-user"></i>
+            Driver Portal
+        </a>
+    </nav>
 
-<section class="risk-section">
+    <!-- ============================================= -->
+    <!-- HEALTH INDICATOR -->
+    <!-- ============================================= -->
 
-    <h2>
-        AI Ride Risk Prediction
-    </h2>
-
-    <div class="risk-container">
-
-        <input
-            type="number"
-            id="risk_passenger_count"
-            placeholder="Passenger Count"
-        />
-
-        <button
-            onclick="runRiskPrediction()"
-        >
-            Predict Risk
-        </button>
-
-        <div id="riskResult">
-
-            No prediction yet
-
-        </div>
-
+    <div
+        id="backendHealthIndicator"
+        class="health-indicator"
+    >
+        ● Checking backend status...
     </div>
 
-</section>
+    <!-- ============================================= -->
+    <!-- PAGE TITLE -->
+    <!-- ============================================= -->
 
+    <div class="section-title">
+        <h1>Ride Risk Prediction Module</h1>
+        <p>AI-powered transportation safety intelligence and anomaly detection</p>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- DASHBOARD METRICS -->
+    <!-- ===================================================== -->
+
+    <div class="dashboard-grid-4">
+        <div class="metrics-card">
+            <h3>Active Rides</h3>
+            <p id="activeRideCount">-</p>
+        </div>
+        <div class="metrics-card">
+            <h3>Risk Alerts</h3>
+            <p id="riskAlertCount">-</p>
+        </div>
+        <div class="metrics-card">
+            <h3>Safe Rides</h3>
+            <p id="safeRideCount">-</p>
+        </div>
+        <div class="metrics-card">
+            <h3>System Status</h3>
+            <p class="success">Active</p>
+        </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- RISK ANALYSIS GRID -->
+    <!-- ===================================================== -->
+
+    <div class="dashboard-grid-2">
+        <!-- RISK PREDICTION -->
+        <div class="glass-card">
+            <div class="section-title">
+                <h3>AI Ride Risk Prediction</h3>
+            </div>
+            <div class="input-group">
+                <label for="risk_passenger_count">Passenger Count</label>
+                <input
+                    type="number"
+                    id="risk_passenger_count"
+                    placeholder="Enter passenger count"
+                />
+            </div>
+            <button class="action-btn" onclick="runRiskPrediction()">
+                <i class="fa-solid fa-brain"></i>
+                Predict Risk
+            </button>
+            <div id="riskResult" class="result-container mt-20">
+                No prediction yet
+            </div>
+        </div>
+
+        <!-- DRIVER RISK ANALYSIS -->
+        <div class="glass-card">
+            <div class="section-title">
+                <h3>Driver Risk Analysis</h3>
+            </div>
+            <div class="input-group">
+                <label for="driverId">Driver ID</label>
+                <input
+                    type="text"
+                    id="driverId"
+                    placeholder="Enter driver ID"
+                />
+            </div>
+            <button class="action-btn" onclick="analyzeDriverRisk()">
+                <i class="fa-solid fa-user-shield"></i>
+                Analyze Driver Risk
+            </button>
+            <div id="driverRiskResult" class="result-container mt-20">
+                No analysis yet
+            </div>
+        </div>
+
+        <!-- ROUTE RISK ANALYSIS -->
+        <div class="glass-card">
+            <div class="section-title">
+                <h3>Route Risk Analysis</h3>
+            </div>
+            <div class="input-group">
+                <label for="routeId">Route ID</label>
+                <input
+                    type="text"
+                    id="routeId"
+                    placeholder="Enter route ID"
+                />
+            </div>
+            <button class="action-btn" onclick="analyzeRouteRisk()">
+                <i class="fa-solid fa-route"></i>
+                Analyze Route Risk
+            </button>
+            <div id="routeRiskResult" class="result-container mt-20">
+                No analysis yet
+            </div>
+        </div>
+
+        <!-- LIVE RISK STATUS -->
+        <div class="glass-card">
+            <div class="section-title">
+                <h3>Live Risk Status</h3>
+            </div>
+            <button class="primary-btn" onclick="getLiveRisk()">
+                <i class="fa-solid fa-bolt"></i>
+                Get Live Risk Status
+            </button>
+            <div id="liveRiskResult" class="result-container mt-20">
+                No live data yet
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- RISK HISTORY -->
+    <!-- ===================================================== -->
+
+    <div class="glass-card mt-30">
+        <div class="section-title">
+            <h3>Risk History</h3>
+        </div>
+        <button class="action-btn" onclick="getRiskHistory()">
+            <i class="fa-solid fa-history"></i>
+            Get Risk History
+        </button>
+        <div id="riskHistoryResult" class="result-container mt-20">
+            No history yet
+        </div>
+    </div>
+
+    <script src="../config.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/risk.js"></script>
+    <script>
+        async function updateHealthIndicator() {
+            try {
+                const health = await getBackendHealth();
+                const indicator = document.getElementById("backendHealthIndicator");
+                
+                if (health && (health.status === "ok" || health.success)) {
+                    indicator.className = "health-indicator healthy";
+                    indicator.innerHTML = "● Backend Online";
+                } else {
+                    indicator.className = "health-indicator unhealthy";
+                    indicator.innerHTML = "● Backend Offline";
+                }
+            } catch (error) {
+                const indicator = document.getElementById("backendHealthIndicator");
+                indicator.className = "health-indicator unhealthy";
+                indicator.innerHTML = "● Backend Offline";
+            }
+        }
+
+        async function updateDashboardMetrics() {
+            try {
+                const rides = await getActiveRides();
+                if (rides && rides.success) {
+                    const activeRides = rides.data || rides;
+                    const rideCount = Object.keys(activeRides).length;
+                    const activeRideCountEl = document.getElementById("activeRideCount");
+                    if (activeRideCountEl) {
+                        activeRideCountEl.textContent = rideCount;
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to update dashboard metrics:", error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateHealthIndicator();
+            updateDashboardMetrics();
+            
+            // Start periodic refresh for health and metrics
+            if (typeof startPeriodicRefresh === 'function') {
+                startPeriodicRefresh(updateHealthIndicator, 10000);
+                startPeriodicRefresh(updateDashboardMetrics, 15000);
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -13,26 +13,80 @@ let mediaRecorder = null;
 let recordedChunks = [];
 
 // =========================================================
+// CLEANUP FUNCTIONS
+// =========================================================
+
+function cleanupDriverCamera() {
+    if (window.driverStream) {
+        window.driverStream.getTracks().forEach(track => track.stop());
+        window.driverStream = null;
+    }
+}
+
+function cleanupVerifyCamera() {
+    if (window.verifyStream) {
+        window.verifyStream.getTracks().forEach(track => track.stop());
+        window.verifyStream = null;
+    }
+}
+
+function cleanupMediaRecorder() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+    }
+    mediaRecorder = null;
+    recordedChunks = [];
+}
+
+// =========================================================
+// LOADING INDICATORS
+// =========================================================
+
+function showLoading(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.disabled = true;
+        element.textContent = "Processing...";
+    }
+}
+
+function hideLoading(elementId, originalText) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.disabled = false;
+        element.textContent = originalText;
+    }
+}
+
+function showError(message) {
+    alert(message);
+}
+
+// =========================================================
 // START DRIVER CAMERA
 // =========================================================
 
 async function startDriverCamera() {
+    try {
+        const video = document.getElementById(
+            "driverVideo"
+        );
 
-    const video = document.getElementById(
-        "driverVideo"
-    );
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
 
-    const stream =
-        await navigator.mediaDevices.getUserMedia({
+                video: true,
 
-            video: true,
+                audio: false
+            });
 
-            audio: false
-        });
+        video.srcObject = stream;
 
-    video.srcObject = stream;
-
-    window.driverStream = stream;
+        window.driverStream = stream;
+    } catch (error) {
+        console.error("Failed to start driver camera:", error);
+        showError("Failed to access camera. Please ensure camera permissions are granted.");
+    }
 }
 
 // =========================================================
@@ -136,177 +190,237 @@ function captureDriverFace() {
 // =========================================================
 
 async function handleDriverRegistration() {
+    console.log("[DEBUG] handleDriverRegistration() called");
+    try {
+        // =====================================================
+        // VALIDATION
+        // =====================================================
+        const finalVideo =
+            recordedVideoBlob;
 
-    // =====================================================
-    // VALIDATION
-    // =====================================================
-    const finalVideo =
-        recordedVideoBlob;
+        console.log("[DEBUG] finalVideo:", finalVideo ? "present" : "missing");
 
-    if (!finalVideo) {
+        if (!finalVideo) {
+            console.error("[DEBUG] Validation failed: No final video");
+            showError("Record or upload liveness video");
+            return;
+        }
 
-        alert(
-            "Record or upload liveness video"
+        if (!driverCapturedBlob) {
+            console.error("[DEBUG] Validation failed: No driver face captured");
+            showError("Capture driver face first");
+            return;
+        }
+
+        console.log("[DEBUG] driverCapturedBlob:", driverCapturedBlob ? "present" : "missing");
+
+        const idProof =
+            document.getElementById(
+                "driverIdProof"
+            ).files[0];
+
+        console.log("[DEBUG] idProof:", idProof ? "present" : "missing");
+
+        if (!idProof) {
+            console.error("[DEBUG] Validation failed: No ID proof");
+            showError("Upload ID proof");
+            return;
+        }
+
+        const driverId =
+            document.getElementById(
+                "driverId"
+            ).value;
+
+        const driverName =
+            document.getElementById(
+                "driverName"
+            ).value;
+
+        console.log("[DEBUG] driverId:", driverId, "driverName:", driverName);
+
+        if (!driverId || !driverName) {
+            console.error("[DEBUG] Validation failed: Missing driver ID or name");
+            showError("Please enter Driver ID and Name");
+            return;
+        }
+
+        // Check backend availability
+        const backendAvailable = window.isBackendAvailable();
+        console.log("[DEBUG] Backend available:", backendAvailable);
+        
+        if (!backendAvailable) {
+            console.error("[DEBUG] Backend unavailable");
+            showError("Backend is currently unavailable. Please try again later.");
+            return;
+        }
+
+        showLoading("registerButton");
+        console.log("[DEBUG] Loading indicator shown");
+
+        // =====================================================
+        // LIVENESS FORM
+        // =====================================================
+
+        const liveFormData =
+            new FormData();
+
+        liveFormData.append(
+
+            "file",
+
+            finalVideo,
+
+            "driver_video.webm"
         );
 
-        return;
-    }
+        console.log("[DEBUG] Liveness FormData created");
 
-    if (!driverCapturedBlob) {
+        // =====================================================
+        // LIVENESS CHECK
+        // =====================================================
 
-        alert(
-            "Capture driver face first"
+        console.log("[DEBUG] Calling checkLiveness()...");
+        const liveResult =
+            await checkLiveness(
+                liveFormData
+            );
+
+        console.log(
+            "[DEBUG] Liveness Result:",
+            liveResult
         );
 
-        return;
-    }
+        // =====================================================
+        // SPOOF DETECTED
+        // =====================================================
 
-    const idProof =
-        document.getElementById(
-            "driverIdProof"
-        ).files[0];
+        if (
 
-    if (!idProof) {
+            !liveResult.success ||
 
-        alert(
-            "Upload ID proof"
+            !liveResult.data.is_live
+        ) {
+            console.error("[DEBUG] Liveness check failed:", liveResult);
+            hideLoading("registerButton", "Register Driver");
+            showError("Spoof detected");
+            return;
+        }
+
+        console.log("[DEBUG] Liveness check passed");
+
+        // =====================================================
+        // FACE VERIFICATION FORM
+        // =====================================================
+
+        const verifyFormData =
+            new FormData();
+
+        verifyFormData.append(
+
+            "driver_id",
+
+            driverId
         );
 
-        return;
-    }
+        verifyFormData.append(
 
-    // =====================================================
-    // LIVENESS FORM
-    // =====================================================
+            "driver_name",
 
-    const liveFormData =
-        new FormData();
-
-    liveFormData.append(
-
-        "file",
-
-        finalVideo,
-
-        "driver_video.webm"
-    );
-
-    // =====================================================
-    // LIVENESS CHECK
-    // =====================================================
-
-    const liveResult =
-        await checkLiveness(
-            liveFormData
+            driverName
         );
 
-    console.log(
-        "Liveness Result:",
-        liveResult
-    );
+        verifyFormData.append(
 
-    // =====================================================
-    // SPOOF DETECTED
-    // =====================================================
+            "id_image",
 
-    if (
-
-        !liveResult.success ||
-
-        !liveResult.data.is_live
-    ) {
-
-        alert(
-            "Spoof detected"
+            idProof
         );
 
-        return;
-    }
+        verifyFormData.append(
 
-    // =====================================================
-    // FACE VERIFICATION FORM
-    // =====================================================
+            "live_image",
 
-    const verifyFormData =
-        new FormData();
+            driverCapturedBlob,
 
-    verifyFormData.append(
-
-        "file",
-
-        driverCapturedBlob,
-
-        "driver_face.jpg"
-    );
-
-    verifyFormData.append(
-
-        "id_proof",
-
-        idProof
-    );
-
-    // =====================================================
-    // REGISTER DRIVER
-    // =====================================================
-
-    const result =
-        await registerDriver(
-            verifyFormData
+            "driver_face.jpg"
         );
 
-    console.log(
-        "Driver Registration:",
-        result
-    );
+        console.log("[DEBUG] Registration FormData created with:", {
+            driver_id: driverId,
+            driver_name: driverName,
+            id_image: idProof ? "present" : "missing",
+            live_image: driverCapturedBlob ? "present" : "missing"
+        });
 
-    // =====================================================
-    // RESULT UI
-    // =====================================================
+        // =====================================================
+        // REGISTER DRIVER
+        // =====================================================
 
-    const resultBox =
-        document.getElementById(
-            "driverResult"
+        console.log("[DEBUG] Calling registerDriver()...");
+        const result =
+            await registerDriver(
+                verifyFormData
+            );
+
+        console.log(
+            "[DEBUG] Driver Registration result:",
+            result
         );
 
-    if (
+        // =====================================================
+        // RESULT UI
+        // =====================================================
 
-        result.success &&
+        const resultBox =
+            document.getElementById(
+                "driverResult"
+            );
 
-        result.data.success
-    ) {
+        if (
 
-        resultBox.innerHTML = `
+            result.success
+        ) {
 
-            <h2 class="success">
+            resultBox.innerHTML = `
 
-                Driver Registered
+                <h2 class="success">
 
-            </h2>
+                    Driver Registered
 
-            <pre>
+                </h2>
+
+                <pre>
 
 ${JSON.stringify(result, null, 2)}
 
-            </pre>
-        `;
+                </pre>
+            `;
 
-    } else {
+        } else {
 
-        resultBox.innerHTML = `
+            resultBox.innerHTML = `
 
-            <h2 class="error">
+                <h2 class="error">
 
-                Registration Failed
+                    Registration Failed
 
-            </h2>
+                </h2>
 
-            <pre>
+                <pre>
 
 ${JSON.stringify(result, null, 2)}
 
-            </pre>
-        `;
+                </pre>
+            `;
+        }
+    } catch (error) {
+        console.error("[DEBUG] Registration error:", error);
+        console.error("[DEBUG] Error stack:", error.stack);
+        showError("Registration failed: " + (error.message || "Unknown error"));
+    } finally {
+        console.log("[DEBUG] Cleaning up loading indicator");
+        hideLoading("registerButton", "Register Driver");
     }
 }
 
@@ -315,22 +429,26 @@ ${JSON.stringify(result, null, 2)}
 // =========================================================
 
 async function startVerifyCamera() {
+    try {
+        const video = document.getElementById(
+            "verifyVideo"
+        );
 
-    const video = document.getElementById(
-        "verifyVideo"
-    );
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
 
-    const stream =
-        await navigator.mediaDevices.getUserMedia({
+                video: true,
 
-            video: true,
+                audio: false
+            });
 
-            audio: false
-        });
+        video.srcObject = stream;
 
-    video.srcObject = stream;
-
-    window.verifyStream = stream;
+        window.verifyStream = stream;
+    } catch (error) {
+        console.error("Failed to start verify camera:", error);
+        showError("Failed to access camera. Please ensure camera permissions are granted.");
+    }
 }
 
 // =========================================================
@@ -434,139 +552,186 @@ function captureVerifyFace() {
 // =========================================================
 
 async function handleVerify() {
+    console.log("[DEBUG] handleVerify() called");
+    try {
+        const finalVideo =
+            recordedVideoBlob;
+        console.log("[DEBUG] finalVideo:", finalVideo ? "present" : "missing");
+        
+        if (!finalVideo) {
+            console.error("[DEBUG] Validation failed: No final video");
+            showError("Record or upload liveness video");
+            return;
+        }
+        if (!verifyCapturedBlob) {
+            console.error("[DEBUG] Validation failed: No verify frame captured");
+            showError("Capture verification frame");
+            return;
+        }
 
-    const finalVideo =
-        recordedVideoBlob;
-    if (!finalVideo) {
+        console.log("[DEBUG] verifyCapturedBlob:", verifyCapturedBlob ? "present" : "missing");
 
-        alert(
-            "Record or upload liveness video"
-        );
+        const driverId =
+            document.getElementById(
+                "verifyDriverId"
+            ).value;
 
-        return;
-    }
-    if (!verifyCapturedBlob) {
+        console.log("[DEBUG] driverId:", driverId);
 
-        alert(
-            "Capture verification frame"
-        );
+        if (!driverId) {
+            console.error("[DEBUG] Validation failed: Missing driver ID");
+            showError("Please enter Driver ID to verify");
+            return;
+        }
 
-        return;
-    }
+        // Check backend availability
+        const backendAvailable = window.isBackendAvailable();
+        console.log("[DEBUG] Backend available:", backendAvailable);
+        
+        if (!backendAvailable) {
+            console.error("[DEBUG] Backend unavailable");
+            showError("Backend is currently unavailable. Please try again later.");
+            return;
+        }
 
-    // =====================================================
-    // LIVENESS CHECK
-    // =====================================================
+        showLoading("verifyButton");
+        console.log("[DEBUG] Loading indicator shown");
 
-    const liveFormData =
-        new FormData();
+        // =====================================================
+        // LIVENESS CHECK
+        // =====================================================
 
-    liveFormData.append(
+        const liveFormData =
+            new FormData();
 
-        "file",
-        finalVideo,
+        liveFormData.append(
+
+            "file",
+
+            finalVideo,
 
     
 
-        "verify_video.webm"
-    );
-
-    const liveResult =
-        await checkLiveness(
-            liveFormData
+            "verify_video.webm"
         );
 
-    console.log(
-        "Verify Liveness:",
-        liveResult
-    );
+        console.log("[DEBUG] Verify liveness FormData created");
+        console.log("[DEBUG] Calling checkLiveness()...");
+        const liveResult =
+            await checkLiveness(
+                liveFormData
+            );
 
-    if (
-
-        !liveResult.success ||
-
-        !liveResult.data.is_live
-    ) {
-
-        alert(
-            "Spoof detected"
+        console.log(
+            "[DEBUG] Verify Liveness Result:",
+            liveResult
         );
 
-        return;
-    }
+        if (
 
-    // =====================================================
-    // FACE VERIFY
-    // =====================================================
+            !liveResult.success ||
 
-    const verifyFormData =
-        new FormData();
+            !liveResult.data.is_live
+        ) {
+            console.error("[DEBUG] Verify liveness check failed:", liveResult);
+            hideLoading("verifyButton", "Verify Driver");
+            showError("Spoof detected");
+            return;
+        }
 
-    verifyFormData.append(
+        console.log("[DEBUG] Verify liveness check passed");
 
-        "file",
+        // =====================================================
+        // FACE VERIFY
+        // =====================================================
 
-        verifyCapturedBlob,
+        const verifyFormData =
+            new FormData();
 
-        "verify_driver.jpg"
-    );
+        verifyFormData.append(
 
-    const result =
-        await verifyFace(
-            verifyFormData
+            "driver_id",
+
+            driverId
         );
 
-    console.log(
-        "Driver Verification:",
-        result
-    );
+        verifyFormData.append(
 
-    // =====================================================
-    // RESULT UI
-    // =====================================================
+            "live_image",
 
-    const resultBox =
-        document.getElementById(
-            "result"
+            verifyCapturedBlob,
+
+            "verify_driver.jpg"
         );
 
-    if (
+        console.log("[DEBUG] Verify FormData created with:", {
+            driver_id: driverId,
+            live_image: verifyCapturedBlob ? "present" : "missing"
+        });
 
-        result.success &&
+        console.log("[DEBUG] Calling verifyFace()...");
+        const result =
+            await verifyFace(
+                verifyFormData
+            );
 
-        result.verified
-    ) {
+        console.log(
+            "[DEBUG] Driver Verification result:",
+            result
+        );
 
-        resultBox.innerHTML = `
+        // =====================================================
+        // RESULT UI
+        // =====================================================
 
-            <h2 class="success">
+        const resultBox =
+            document.getElementById(
+                "result"
+            );
 
-                Driver Verified
+        if (
 
-            </h2>
+            result.success &&
 
-            <pre>
+            result.data?.verified
+        ) {
+
+            resultBox.innerHTML = `
+
+                <h2 class="success">
+
+                    Driver Verified
+
+                </h2>
+
+                <pre>
 
 ${JSON.stringify(result, null, 2)}
 
-            </pre>
-        `;
+                </pre>
+            `;
 
-    } else {
+        } else {
 
-        resultBox.innerHTML = `
+            resultBox.innerHTML = `
 
-            <h2 class="error">
+                <h2 class="error">
 
-                Verification Failed
+                    Verification Failed
 
-            </h2>
+                </h2>
 
-            <pre>
+                <pre>
 
 ${JSON.stringify(result, null, 2)}
 
-            </pre>
-        `;
+                </pre>
+            `;
+        }
+    } catch (error) {
+        console.error("Verification error:", error);
+        showError("Verification failed: " + (error.message || "Unknown error"));
+    } finally {
+        hideLoading("verifyButton", "Verify Driver");
     }
 }

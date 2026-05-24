@@ -12,6 +12,11 @@
 
     <link
         rel="stylesheet"
+        href="../css/shared.css"
+    >
+
+    <link
+        rel="stylesheet"
         href="../css/face_verification.css"
     >
 
@@ -20,6 +25,44 @@
 <body>
 
 <div class="container">
+
+    <!-- ============================================= -->
+    <!-- NAVIGATION -->
+    <!-- ============================================= -->
+
+    <nav class="page-nav">
+        <a href="../index.html" class="nav-link">
+            <i class="fa-solid fa-house"></i>
+            Home
+        </a>
+        <a href="ride_optimization.html" class="nav-link">
+            <i class="fa-solid fa-route"></i>
+            Ride Optimization
+        </a>
+        <a href="user_verification.html" class="nav-link active">
+            <i class="fa-solid fa-shield-halved"></i>
+            Verification
+        </a>
+        <a href="ride_risk.html" class="nav-link">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            Risk Prediction
+        </a>
+        <a href="driver_portal.html" class="nav-link">
+            <i class="fa-solid fa-user"></i>
+            Driver Portal
+        </a>
+    </nav>
+
+    <!-- ============================================= -->
+    <!-- HEALTH INDICATOR -->
+    <!-- ============================================= -->
+
+    <div
+        id="backendHealthIndicator"
+        class="health-indicator"
+    >
+        ● Checking backend status...
+    </div>
 
     <!-- ============================================= -->
     <!-- PAGE TITLE -->
@@ -112,6 +155,34 @@
 
         </div>
 
+        <!-- DRIVER ID -->
+
+        <label>
+
+            Driver ID
+
+        </label>
+
+        <input
+            type="text"
+            id="driverId"
+            placeholder="e.g., DRV_001"
+        >
+
+        <!-- DRIVER NAME -->
+
+        <label>
+
+            Driver Name
+
+        </label>
+
+        <input
+            type="text"
+            id="driverName"
+            placeholder="e.g., John Doe"
+        >
+
         <!-- ID PROOF -->
 
         <label>
@@ -128,6 +199,7 @@
         <!-- REGISTER -->
 
         <button
+            id="registerButton"
             onclick="handleDriverRegistration()"
         >
 
@@ -223,9 +295,24 @@
 
         </div>
 
+        <!-- DRIVER ID FOR VERIFICATION -->
+
+        <label>
+
+            Driver ID to Verify
+
+        </label>
+
+        <input
+            type="text"
+            id="verifyDriverId"
+            placeholder="e.g., DRV_001"
+        >
+
         <!-- VERIFY BUTTON -->
 
         <button
+            id="verifyButton"
             onclick="handleVerify()"
         >
 
@@ -248,8 +335,8 @@
 
 </div>
 
+<script src="../config.js"></script>
 <script src="../js/api.js"></script>
-
 <script src="../js/face_verification.js"></script>
 
 </body>

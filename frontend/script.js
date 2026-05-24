@@ -518,16 +518,17 @@ async function checkBackendStatus() {
 
     try {
 
-        // =============================================
-        // REPLACE WITH REAL API LATER
-        // =============================================
+        const health = await getBackendHealth();
 
-        const online = true;
-
-        if (online) {
+        if (health && health.success) {
 
             updateStatusIndicator(
                 "ONLINE"
+            );
+        } else {
+
+            updateStatusIndicator(
+                "OFFLINE"
             );
         }
 

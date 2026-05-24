@@ -144,26 +144,16 @@ class ModelRegistry:
             logger.error("Failed to load risk model: %s", exc)
             return False
 
-    def get_video_model(self) -> VideoModel:
+    def get_video_model(self) -> Optional[VideoModel]:
         with self._registry_lock:
             if self._video_model is None:
                 self._load_video_model(get_settings())
-            if self._video_model is None:
-                raise RuntimeError(
-                    "Video liveness model is not loaded. "
-                    "Check VIDEO_LIVENESS_MODEL_PATH."
-                )
             return self._video_model
 
-    def get_risk_bundle(self) -> RiskModelBundle:
+    def get_risk_bundle(self) -> Optional[RiskModelBundle]:
         with self._registry_lock:
             if self._risk_bundle is None:
                 self._load_risk_model(get_settings())
-            if self._risk_bundle is None:
-                raise RuntimeError(
-                    "Risk model is not loaded. "
-                    "Check RISK_AUTOENCODER_PATH and RISK_SCALER_PATH."
-                )
             return self._risk_bundle
 
     @property

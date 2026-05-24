@@ -5,21 +5,28 @@ Phase 1: centralized model loading, service layer, thin routes.
 """
 
 import logging
+import sys
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from backend.config import get_settings
 from backend.core.model_registry import get_model_registry
+from ai_models.ride_optimization.state_manager import state
 from backend.routes.liveness import router as liveness_router
 from backend.routes.ride_optimization import router as ride_router
 from backend.routes.risk_prediction import router as risk_router
 from backend.routes.verify import router as verify_router
 
+# Structured logging configuration
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -28,7 +35,14 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Load AI models once at startup."""
     settings = get_settings()
+    state.persist_path = settings.ride_state_path
     settings.ensure_directories()
+
+    if state.load_from_disk():
+        logger.info(
+            "Restored %d active rides from disk",
+            len(state.active_rides),
+        )
 
     registry = get_model_registry()
     load_status = registry.load_all(settings)
@@ -59,6 +73,19 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Global exception handler
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception):
+        logger.error(f"Unhandled exception: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "error": "Internal server error",
+                "detail": str(exc) if settings.debug else "An unexpected error occurred",
+            },
+        )
 
     app.include_router(
         verify_router,
