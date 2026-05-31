@@ -22,6 +22,12 @@ Bamboo Force AI enables:
 
 ---
 
+## Demo Video
+
+🎥 Watch the demo:
+https://youtu.be/A0LzIKwo_6Q
+
+
 ## 🏗️ System Architecture
 
 ```
